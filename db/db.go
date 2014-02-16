@@ -7,12 +7,6 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-var (
-	// ErrAccountNotFound is returned when an account with the given id does
-	// not exist.
-	ErrAccountNotFound = &Error{"account not found", nil}
-)
-
 // DB represents a Bolt-backed data store.
 // The DB stores all non-event data.
 type DB struct {
@@ -42,15 +36,10 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 
 // Account retrieves an Account from the database with the given identifier.
 func (db *DB) Account(id int) (*Account, error) {
-	value, err := db.Get("accounts", itob(id))
-	if err != nil {
+	a := &Account{db: db, id: id}
+	if err := a.Load(); err != nil {
 		return nil, err
-	} else if value == nil {
-		return nil, ErrAccountNotFound
 	}
-
-	a := &Account{db: db}
-	unmarshal(value, &a)
 	return a, nil
 }
 
@@ -58,7 +47,7 @@ func (db *DB) Account(id int) (*Account, error) {
 func (db *DB) Accounts() (Accounts, error) {
 	accounts := make(Accounts, 0)
 	err := db.ForEach("accounts", func(k, v []byte) error {
-		a := &Account{db: db}
+		a := &Account{db: db, id: btoi(k)}
 		unmarshal(v, &a)
 		accounts = append(accounts, a)
 		return nil
@@ -70,7 +59,7 @@ func (db *DB) Accounts() (Accounts, error) {
 
 // CreateAccount creates a new Account in the database.
 func (db *DB) CreateAccount(a *Account) error {
-	assert(a.Id == 0, "account creation with a non-zero id: %d", a.Id)
+	assert(a.id == 0, "account creation with a non-zero id: %d", a.Id)
 	if err := a.Validate(); err != nil {
 		return err
 	}
@@ -78,8 +67,8 @@ func (db *DB) CreateAccount(a *Account) error {
 	a.db = db
 	return db.Do(func(txn *bolt.RWTransaction) error {
 		var err error
-		a.Id, err = txn.NextSequence("accounts")
-		assert(a.Id > 0, "account sequence error: %s", err)
-		return txn.Put("accounts", itob(a.Id), marshal(a))
+		a.id, err = txn.NextSequence("accounts")
+		assert(a.id > 0, "account sequence error: %s", err)
+		return a.SaveTo(txn)
 	})
 }

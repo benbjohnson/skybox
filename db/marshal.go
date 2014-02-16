@@ -13,7 +13,7 @@ func marshal(v interface{}) []byte {
 	return b
 }
 
-// unmarshal converts a value from its storage representation.
+// unmarshal converts to a value from its storage representation.
 // All data is expected to be unmarshallable so errors will panic.
 func unmarshal(data []byte, v interface{}) {
 	err := json.Unmarshal(data, v)
@@ -23,4 +23,11 @@ func unmarshal(data []byte, v interface{}) {
 // itob converts an integer into a []byte representation.
 func itob(i int) []byte {
 	return []byte(strconv.Itoa(i))
+}
+
+// btoi converts to integer from a []byte representation.
+func btoi(b []byte) int {
+	i, err := strconv.Atoi(string(b))
+	assert(err == nil, "btoi error: %s", err)
+	return i
 }

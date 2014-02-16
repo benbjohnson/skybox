@@ -1,11 +1,14 @@
 package db
 
 import (
-
-// "github.com/boltdb/bolt"
+	"github.com/boltdb/bolt"
 )
 
 var (
+	// ErrAccountNotFound is returned when an account with the given id does
+	// not exist.
+	ErrAccountNotFound = &Error{"account not found", nil}
+
 	// ErrAccountNameRequired is returned when an account has a blank name.
 	ErrAccountNameRequired = &Error{"account name required", nil}
 )
@@ -13,13 +16,18 @@ var (
 // Account represents a collection of Users and Projects.
 type Account struct {
 	db   *DB
-	Id   int
+	id   int
 	Name string
 }
 
 // DB returns the database that created the account.
 func (a *Account) DB() *DB {
 	return a.db
+}
+
+// Id returns the account identifier.
+func (a *Account) Id() int {
+	return a.id
 }
 
 // Validate validates all fields of the account.
@@ -30,9 +38,30 @@ func (a *Account) Validate() error {
 	return nil
 }
 
-// Update updates all fields in the account using a map.
-func (a *Account) Update(values map[string]interface{}) error {
-	return nil // TODO
+// Load retrieves an account from the database.
+func (a *Account) Load() error {
+	value, err := a.db.Get("accounts", itob(a.id))
+	if err != nil {
+		return err
+	} else if value == nil {
+		return ErrAccountNotFound
+	}
+
+	unmarshal(value, &a)
+	return nil
+}
+
+// Save commits the Account to the database.
+func (a *Account) Save() error {
+	return a.db.Do(func(txn *bolt.RWTransaction) error {
+		return a.SaveTo(txn)
+	})
+}
+
+// SaveTo commits the Account to an open transaction.
+func (a *Account) SaveTo(txn *bolt.RWTransaction) error {
+	assert(a.id > 0, "uninitialized account cannot be saved")
+	return txn.Put("accounts", itob(a.id), marshal(a))
 }
 
 // Delete removes the account from the database.
