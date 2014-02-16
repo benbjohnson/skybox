@@ -2,6 +2,7 @@ package db
 
 import (
 	"os"
+	"sort"
 
 	"github.com/boltdb/bolt"
 )
@@ -53,9 +54,18 @@ func (db *DB) Account(id int) (*Account, error) {
 	return a, nil
 }
 
-// Accounts retrieves all Accounts from the database.
+// Accounts retrieves all Account objects from the database.
 func (db *DB) Accounts() (Accounts, error) {
-	return nil, nil // TODO
+	accounts := make(Accounts, 0)
+	err := db.ForEach("accounts", func(k, v []byte) error {
+		a := &Account{db: db}
+		unmarshal(v, &a)
+		accounts = append(accounts, a)
+		return nil
+	})
+	assert(err == nil, "accounts retrieval error: %s", err)
+	sort.Sort(accounts)
+	return accounts, nil
 }
 
 // CreateAccount creates a new Account in the database.

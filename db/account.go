@@ -1,6 +1,7 @@
 package db
 
 import (
+
 // "github.com/boltdb/bolt"
 )
 
@@ -15,9 +16,6 @@ type Account struct {
 	Id   int
 	Name string
 }
-
-// Accounts is a list of Account objects.
-type Accounts []*Account
 
 // DB returns the database that created the account.
 func (a *Account) DB() *DB {
@@ -58,3 +56,9 @@ func (a *Account) Projects() (Projects, error) {
 func (a *Account) CreateProject(p *Project) error {
 	return nil // TODO
 }
+
+type Accounts []*Account
+
+func (s Accounts) Len() int           { return len(s) }
+func (s Accounts) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s Accounts) Less(i, j int) bool { return s[i].Name < s[j].Name }

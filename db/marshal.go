@@ -9,18 +9,15 @@ import (
 // All values are expected to be marshallable so errors will panic.
 func marshal(v interface{}) []byte {
 	b, err := json.Marshal(v)
-	if err != nil {
-		panic("marshal error: " + err.Error())
-	}
+	assert(err == nil, "marshal error: %s", err)
 	return b
 }
 
 // unmarshal converts a value from its storage representation.
 // All data is expected to be unmarshallable so errors will panic.
 func unmarshal(data []byte, v interface{}) {
-	if err := json.Unmarshal(data, v); err != nil {
-		panic("marshal error: " + err.Error())
-	}
+	err := json.Unmarshal(data, v)
+	assert(err == nil, "unmarshal error: %s", err)
 }
 
 // itob converts an integer into a []byte representation.

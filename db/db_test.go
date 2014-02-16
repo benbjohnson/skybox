@@ -46,6 +46,31 @@ func TestDBAccountNotFound(t *testing.T) {
 	})
 }
 
+// Ensure that the database can return all accounts.
+func TestDBAccounts(t *testing.T) {
+	withDB(func(db *DB) {
+		db.CreateAccount(&Account{Name: "Foo"})
+		db.CreateAccount(&Account{Name: "Bar"})
+		db.CreateAccount(&Account{Name: "Baz"})
+
+		// Retrieve the accounts.
+		accounts, err := db.Accounts()
+		if assert.NoError(t, err) && assert.Equal(t, len(accounts), 3) {
+			assert.Equal(t, accounts[0].DB(), db)
+			assert.Equal(t, accounts[0].Id, 2)
+			assert.Equal(t, accounts[0].Name, "Bar")
+
+			assert.Equal(t, accounts[1].DB(), db)
+			assert.Equal(t, accounts[1].Id, 3)
+			assert.Equal(t, accounts[1].Name, "Baz")
+
+			assert.Equal(t, accounts[2].DB(), db)
+			assert.Equal(t, accounts[2].Id, 1)
+			assert.Equal(t, accounts[2].Name, "Foo")
+		}
+	})
+}
+
 // withDB executes a function with an open database.
 func withDB(fn func(*DB)) {
 	f, _ := ioutil.TempFile("", "skybox-")
