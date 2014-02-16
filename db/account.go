@@ -66,9 +66,20 @@ func (a *Account) SaveTo(txn *bolt.RWTransaction) error {
 
 // Delete removes the account from the database.
 func (a *Account) Delete() error {
+	return a.db.Do(func(txn *bolt.RWTransaction) error {
+		return a.DeleteFrom(txn)
+	})
+}
+
+// DeleteFrom removes the account from an open transaction.
+func (a *Account) DeleteFrom(txn *bolt.RWTransaction) error {
+	err := txn.Delete("accounts", itob(a.id))
+	assert(err == nil, "account delete error: %s", err)
+
 	// TODO: Remove all projects.
 	// TODO: Remove all users.
-	return nil // TODO
+
+	return nil
 }
 
 // Project a project within this account by id.
