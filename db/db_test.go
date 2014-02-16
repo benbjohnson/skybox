@@ -29,6 +29,23 @@ func TestDBCreateAccount(t *testing.T) {
 	})
 }
 
+// Ensure that the database will reject an invalid account.
+func TestDBCreateInvalidAccount(t *testing.T) {
+	withDB(func(db *DB) {
+		err := db.CreateAccount(&Account{})
+		assert.Equal(t, err, ErrAccountNameRequired)
+	})
+}
+
+// Ensure that retrieving a missing account returns an error.
+func TestDBAccountNotFound(t *testing.T) {
+	withDB(func(db *DB) {
+		a, err := db.Account(1)
+		assert.Equal(t, err, ErrAccountNotFound)
+		assert.Nil(t, a)
+	})
+}
+
 // withDB executes a function with an open database.
 func withDB(fn func(*DB)) {
 	f, _ := ioutil.TempFile("", "skybox-")

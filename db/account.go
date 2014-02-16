@@ -4,6 +4,11 @@ import (
 // "github.com/boltdb/bolt"
 )
 
+var (
+	// ErrAccountNameRequired is returned when an account has a blank name.
+	ErrAccountNameRequired = &Error{"account name required", nil}
+)
+
 // Account represents a collection of Users and Projects.
 type Account struct {
 	db   *DB
@@ -21,7 +26,10 @@ func (a *Account) DB() *DB {
 
 // Validate validates all fields of the account.
 func (a *Account) Validate() error {
-	return nil // TODO
+	if len(a.Name) == 0 {
+		return ErrAccountNameRequired
+	}
+	return nil
 }
 
 // Update updates all fields in the account using a map.

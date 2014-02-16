@@ -26,11 +26,8 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 
 	// Create buckets.
 	err := db.Do(func(txn *bolt.RWTransaction) error {
-		if txn.Bucket("accounts") == nil {
-			if err := txn.CreateBucket("accounts"); err != nil {
-				return err
-			}
-		}
+		err := txn.CreateBucketIfNotExists("accounts")
+		assert(err == nil, "accounts bucket error: %s", err)
 		return nil
 	})
 
