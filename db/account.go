@@ -110,8 +110,14 @@ func (a *Account) CreateUser(u *User) error {
 	u.AccountId = a.id
 
 	return u.db.Do(func(txn *bolt.RWTransaction) error {
+		// Verify account exists.
 		if _, err := a.get(&txn.Transaction); err != nil {
 			return err
+		}
+
+		// Verify that username is not taken.
+		if id := getUniqueIndex(&txn.Transaction, "user.username", []byte(u.Username)); id != 0 {
+			return ErrUserUsernameTaken
 		}
 
 		// Generate new id.
@@ -119,7 +125,8 @@ func (a *Account) CreateUser(u *User) error {
 		assert(u.id > 0, "user sequence error")
 
 		// Add user id to secondary index.
-		insertIntoIndex(txn, "account.users", itob(a.id), u.id)
+		insertIntoForeignKeyIndex(txn, "account.users", itob(a.id), u.id)
+		insertIntoUniqueIndex(txn, "user.username", []byte(u.Username), u.id)
 
 		// Save user.
 		return u.save(txn)
@@ -130,7 +137,7 @@ func (a *Account) CreateUser(u *User) error {
 func (a *Account) Users() (Users, error) {
 	users := make(Users, 0)
 	err := a.db.With(func(txn *bolt.Transaction) error {
-		index := getIndex(txn, "account.users", itob(a.id))
+		index := getForeignKeyIndex(txn, "account.users", itob(a.id))
 
 		for _, id := range index {
 			u := &User{db: a.db, id: id}

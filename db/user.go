@@ -12,6 +12,9 @@ var (
 	// ErrUserUsernameRequired is returned when a user has a blank username.
 	ErrUserUsernameRequired = &Error{"user username required", nil}
 
+	// ErrUserUsernameTaken is returned when a username already exists.
+	ErrUserUsernameTaken = &Error{"user username is already taken", nil}
+
 	// ErrUserPasswordRequired is returned when a user has a blank password.
 	ErrUserPasswordRequired = &Error{"user password required", nil}
 
@@ -118,8 +121,9 @@ func (u *User) del(txn *bolt.RWTransaction) error {
 	err := txn.Delete("users", itob(u.id))
 	assert(err == nil, "user delete error: %s", err)
 
-	// Remove user id from secondary index.
-	removeFromIndex(txn, "account.users", itob(u.AccountId), u.id)
+	// Remove user id from indices.
+	removeFromForeignKeyIndex(txn, "account.users", itob(u.AccountId), u.id)
+	removeFromUniqueIndex(txn, "user.username", []byte(u.Username))
 
 	return nil
 }

@@ -117,6 +117,18 @@ func TestAccountCreateUserPasswordTooLong(t *testing.T) {
 	})
 }
 
+// Ensure that creating a user with an already taken username returns an error.
+func TestAccountCreateUserUsernameTaken(t *testing.T) {
+	withDB(func(db *DB) {
+		a := &Account{Name: "Foo"}
+		assert.NoError(t, db.CreateAccount(a))
+		err := a.CreateUser(&User{Username: "johndoe", Password: "password"})
+		assert.NoError(t, err)
+		err = a.CreateUser(&User{Username: "johndoe", Password: "foobar"})
+		assert.Equal(t, err, ErrUserUsernameTaken)
+	})
+}
+
 // Ensure that an account can retrieve all associated users.
 func TestAccountUsers(t *testing.T) {
 	withDB(func(db *DB) {

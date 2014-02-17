@@ -30,6 +30,9 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 		err = txn.CreateBucketIfNotExists("users")
 		assert(err == nil, "users bucket error: %s", err)
 
+		err = txn.CreateBucketIfNotExists("user.username")
+		assert(err == nil, "user.username bucket error: %s", err)
+
 		return nil
 	})
 
@@ -89,33 +92,17 @@ func (db *DB) User(id int) (*User, error) {
 	return u, nil
 }
 
-// getIndex retrieves a list of ids from a named index.
-func getIndex(txn *bolt.Transaction, name string, key []byte) ids {
-	// Retrieve index.
-	v, err := txn.Get(name, key)
-	assert(err == nil, "index error: %s", err)
-
-	// Unmarshal the index.
-	var index ids
-	if v != nil && len(v) > 0 {
-		unmarshal(v, &index)
+// UserByUsername retrieves a User from the database with the given username.
+func (db *DB) UserByUsername(username string) (*User, error) {
+	u := &User{db: db}
+	err := db.With(func(txn *bolt.Transaction) error {
+		if u.id = getUniqueIndex(txn, "user.username", []byte(username)); u.id == 0 {
+			return ErrUserNotFound
+		}
+		return u.Load()
+	})
+	if err != nil {
+		return nil, err
 	}
-
-	return index
-}
-
-// insertIntoIndex adds an id into a named index within a transaction.
-func insertIntoIndex(txn *bolt.RWTransaction, name string, key []byte, id int) {
-	index := getIndex(&txn.Transaction, name, key)
-	index = index.insert(id)
-	err := txn.Put(name, key, marshal(index))
-	assert(err == nil, "index insert error: %s", err)
-}
-
-// removeFromIndex removes an id from a named index within a transaction.
-func removeFromIndex(txn *bolt.RWTransaction, name string, key []byte, id int) {
-	index := getIndex(&txn.Transaction, name, key)
-	index = index.remove(id)
-	err := txn.Put(name, key, marshal(index))
-	assert(err == nil, "index remove error: %s", err)
+	return u, nil
 }

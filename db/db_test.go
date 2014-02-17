@@ -80,6 +80,31 @@ func TestDBUserNotFound(t *testing.T) {
 	})
 }
 
+// Ensure that the database can retrieve a user by username.
+func TestDBUserByUsername(t *testing.T) {
+	withDB(func(db *DB) {
+		// Add account and users.
+		a := &Account{Name: "foo"}
+		assert.NoError(t, db.CreateAccount(a))
+		assert.NoError(t, a.CreateUser(&User{Username: "johndoe", Password: "password"}))
+		assert.NoError(t, a.CreateUser(&User{Username: "susyque", Password: "password"}))
+
+		// Find user.
+		u, _ := db.UserByUsername("susyque")
+		assert.Equal(t, u.Id(), 2)
+
+		// Delete user and find.
+		assert.NoError(t, u.Delete())
+		_, err := db.UserByUsername("susyque")
+		assert.Equal(t, err, ErrUserNotFound)
+
+		// Re-add and find again.
+		assert.NoError(t, a.CreateUser(&User{Username: "susyque", Password: "foobar"}))
+		u, _ = db.UserByUsername("susyque")
+		assert.Equal(t, u.Id(), 3)
+	})
+}
+
 // withDB executes a function with an open database.
 func withDB(fn func(*DB)) {
 	f, _ := ioutil.TempFile("", "skybox-")
