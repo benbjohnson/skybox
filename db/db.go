@@ -27,11 +27,17 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 		err = txn.CreateBucketIfNotExists("account.users")
 		assert(err == nil, "account.users bucket error: %s", err)
 
+		err = txn.CreateBucketIfNotExists("account.projects")
+		assert(err == nil, "account.projects bucket error: %s", err)
+
 		err = txn.CreateBucketIfNotExists("users")
 		assert(err == nil, "users bucket error: %s", err)
 
 		err = txn.CreateBucketIfNotExists("user.username")
 		assert(err == nil, "user.username bucket error: %s", err)
+
+		err = txn.CreateBucketIfNotExists("projects")
+		assert(err == nil, "projects bucket error: %s", err)
 
 		return nil
 	})
@@ -105,4 +111,13 @@ func (db *DB) UserByUsername(username string) (*User, error) {
 		return nil, err
 	}
 	return u, nil
+}
+
+// Project retrieves a Project from the database with the given identifier.
+func (db *DB) Project(id int) (*Project, error) {
+	p := &Project{db: db, id: id}
+	if err := p.Load(); err != nil {
+		return nil, err
+	}
+	return p, nil
 }

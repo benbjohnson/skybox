@@ -153,6 +153,55 @@ func (a *Account) Users() (Users, error) {
 	return users, nil
 }
 
+// CreateProject creates a new Project for this account.
+func (a *Account) CreateProject(p *Project) error {
+	assert(p.id == 0, "create project with a non-zero id: %d", p.id)
+	assert(a.id > 0, "create project on unsaved account: %d", a.id)
+	if err := p.Validate(); err != nil {
+		return err
+	}
+
+	p.db = a.db
+	p.AccountId = a.id
+
+	return p.db.Do(func(txn *bolt.RWTransaction) error {
+		// Verify account exists.
+		if _, err := a.get(&txn.Transaction); err != nil {
+			return err
+		}
+
+		// Generate new id.
+		p.id, _ = txn.NextSequence("projects")
+		assert(p.id > 0, "project sequence error")
+
+		// Add project id to secondary index.
+		insertIntoForeignKeyIndex(txn, "account.projects", itob(a.id), p.id)
+
+		// Save project.
+		return p.save(txn)
+	})
+}
+
+// Projects retrieves a list of all projects for the account.
+func (a *Account) Projects() (Projects, error) {
+	projects := make(Projects, 0)
+	err := a.db.With(func(txn *bolt.Transaction) error {
+		index := getForeignKeyIndex(txn, "account.projects", itob(a.id))
+
+		for _, id := range index {
+			p := &Project{db: a.db, id: id}
+			err := p.load(txn)
+			assert(err == nil, "project (%d) not found from account.projects index (%d)", p.id, a.id)
+			assert(p.AccountId == a.id, "project/account mismatch: %d (%d) not in %d", p.id, p.AccountId, a.id)
+			projects = append(projects, p)
+		}
+		return nil
+	})
+	assert(err == nil, "projects retrieval error: %s", err)
+	sort.Sort(projects)
+	return projects, nil
+}
+
 type Accounts []*Account
 
 func (s Accounts) Len() int           { return len(s) }

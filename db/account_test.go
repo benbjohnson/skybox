@@ -1,7 +1,6 @@
 package db_test
 
 import (
-	"strings"
 	"testing"
 
 	. "github.com/benbjohnson/skybox/db"
@@ -41,94 +40,6 @@ func TestAccountDelete(t *testing.T) {
 	})
 }
 
-// Ensure that an account can create a user.
-func TestAccountCreateUser(t *testing.T) {
-	withDB(func(db *DB) {
-		// Create an account and user.
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		u := &User{Username: "johndoe", Password: "mybirthday"}
-		assert.NoError(t, a.CreateUser(u))
-		assert.Equal(t, u.Id(), 1)
-
-		// Retrieve the user.
-		u2, err := db.User(1)
-		if assert.NoError(t, err) && assert.NotNil(t, u2) {
-			assert.Equal(t, u2.DB(), db)
-			assert.Equal(t, u2.Id(), 1)
-			assert.Equal(t, u2.AccountId, 1)
-			assert.Equal(t, u2.Username, "johndoe")
-		}
-	})
-}
-
-// Ensure that an account cannot create a user after it's deleted.
-func TestAccountCreateUserAfterDeletion(t *testing.T) {
-	withDB(func(db *DB) {
-		// Create an account and delete it.
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		assert.NoError(t, a.Delete())
-
-		// Attempt to create a user.
-		err := a.CreateUser(&User{Username: "johndoe", Password: "password"})
-		assert.Equal(t, err, ErrAccountNotFound)
-	})
-}
-
-// Ensure that creating an invalid user returns an error.
-func TestAccountCreateUserMissingUsername(t *testing.T) {
-	withDB(func(db *DB) {
-		// Create an account and user.
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		err := a.CreateUser(&User{Password: "password"})
-		assert.Equal(t, err, ErrUserUsernameRequired)
-	})
-}
-
-// Ensure that creating a user without a password returns an error.
-func TestAccountCreateUserMissingPassword(t *testing.T) {
-	withDB(func(db *DB) {
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		err := a.CreateUser(&User{Username: "johndoe"})
-		assert.Equal(t, err, ErrUserPasswordRequired)
-	})
-}
-
-// Ensure that creating a user with a short password returns an error.
-func TestAccountCreateUserPasswordTooShort(t *testing.T) {
-	withDB(func(db *DB) {
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		err := a.CreateUser(&User{Username: "johndoe", Password: "abc"})
-		assert.Equal(t, err, ErrUserPasswordTooShort)
-	})
-}
-
-// Ensure that creating a user with a long password returns an error.
-func TestAccountCreateUserPasswordTooLong(t *testing.T) {
-	withDB(func(db *DB) {
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		err := a.CreateUser(&User{Username: "johndoe", Password: strings.Repeat("*", 51)})
-		assert.Equal(t, err, ErrUserPasswordTooLong)
-	})
-}
-
-// Ensure that creating a user with an already taken username returns an error.
-func TestAccountCreateUserUsernameTaken(t *testing.T) {
-	withDB(func(db *DB) {
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		err := a.CreateUser(&User{Username: "johndoe", Password: "password"})
-		assert.NoError(t, err)
-		err = a.CreateUser(&User{Username: "johndoe", Password: "foobar"})
-		assert.Equal(t, err, ErrUserUsernameTaken)
-	})
-}
-
 // Ensure that an account can retrieve all associated users.
 func TestAccountUsers(t *testing.T) {
 	withDB(func(db *DB) {
@@ -139,8 +50,8 @@ func TestAccountUsers(t *testing.T) {
 		assert.NoError(t, db.CreateAccount(a2))
 
 		// Add users to first account.
-		assert.NoError(t, a1.CreateUser(&User{Username: "johndoe", Password: "password"}))
 		assert.NoError(t, a1.CreateUser(&User{Username: "susyque", Password: "password"}))
+		assert.NoError(t, a1.CreateUser(&User{Username: "johndoe", Password: "password"}))
 
 		// Add users to second account.
 		assert.NoError(t, a2.CreateUser(&User{Username: "billybob", Password: "password"}))
@@ -149,12 +60,12 @@ func TestAccountUsers(t *testing.T) {
 		users, err := a1.Users()
 		if assert.NoError(t, err) && assert.Equal(t, len(users), 2) {
 			assert.Equal(t, users[0].DB(), db)
-			assert.Equal(t, users[0].Id(), 1)
+			assert.Equal(t, users[0].Id(), 2)
 			assert.Equal(t, users[0].AccountId, 1)
 			assert.Equal(t, users[0].Username, "johndoe")
 
 			assert.Equal(t, users[1].DB(), db)
-			assert.Equal(t, users[1].Id(), 2)
+			assert.Equal(t, users[1].Id(), 1)
 			assert.Equal(t, users[1].AccountId, 1)
 			assert.Equal(t, users[1].Username, "susyque")
 		}
@@ -166,6 +77,47 @@ func TestAccountUsers(t *testing.T) {
 			assert.Equal(t, users[0].Id(), 3)
 			assert.Equal(t, users[0].AccountId, 2)
 			assert.Equal(t, users[0].Username, "billybob")
+		}
+	})
+}
+
+// Ensure that an account can retrieve all associated projects.
+func TestAccountProjects(t *testing.T) {
+	withDB(func(db *DB) {
+		// Create two accounts.
+		a1 := &Account{Name: "foo"}
+		assert.NoError(t, db.CreateAccount(a1))
+		a2 := &Account{Name: "bar"}
+		assert.NoError(t, db.CreateAccount(a2))
+
+		// Add projects to first account.
+		assert.NoError(t, a1.CreateProject(&Project{Name: "Project Y"}))
+		assert.NoError(t, a1.CreateProject(&Project{Name: "Project X"}))
+
+		// Add projects to second account.
+		assert.NoError(t, a2.CreateProject(&Project{Name: "Project A"}))
+
+		// Check first account projects.
+		projects, err := a1.Projects()
+		if assert.NoError(t, err) && assert.Equal(t, len(projects), 2) {
+			assert.Equal(t, projects[0].DB(), db)
+			assert.Equal(t, projects[0].Id(), 2)
+			assert.Equal(t, projects[0].AccountId, 1)
+			assert.Equal(t, projects[0].Name, "Project X")
+
+			assert.Equal(t, projects[1].DB(), db)
+			assert.Equal(t, projects[1].Id(), 1)
+			assert.Equal(t, projects[1].AccountId, 1)
+			assert.Equal(t, projects[1].Name, "Project Y")
+		}
+
+		// Check second account projects.
+		projects, err = a2.Projects()
+		if assert.NoError(t, err) && assert.Equal(t, len(projects), 1) {
+			assert.Equal(t, projects[0].DB(), db)
+			assert.Equal(t, projects[0].Id(), 3)
+			assert.Equal(t, projects[0].AccountId, 2)
+			assert.Equal(t, projects[0].Name, "Project A")
 		}
 	})
 }
