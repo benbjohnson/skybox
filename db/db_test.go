@@ -71,6 +71,15 @@ func TestDBAccounts(t *testing.T) {
 	})
 }
 
+// Ensure that retrieving a missing user returns an error.
+func TestDBUserNotFound(t *testing.T) {
+	withDB(func(db *DB) {
+		u, err := db.User(1)
+		assert.Equal(t, err, ErrUserNotFound)
+		assert.Nil(t, u)
+	})
+}
+
 // withDB executes a function with an open database.
 func withDB(fn func(*DB)) {
 	f, _ := ioutil.TempFile("", "skybox-")
