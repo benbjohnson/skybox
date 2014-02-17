@@ -1,6 +1,7 @@
 package db_test
 
 import (
+	"strings"
 	"testing"
 
 	. "github.com/benbjohnson/skybox/db"
@@ -46,7 +47,7 @@ func TestAccountCreateUser(t *testing.T) {
 		// Create an account and user.
 		a := &Account{Name: "Foo"}
 		assert.NoError(t, db.CreateAccount(a))
-		u := &User{Username: "johndoe"}
+		u := &User{Username: "johndoe", Password: "mybirthday"}
 		assert.NoError(t, a.CreateUser(u))
 		assert.Equal(t, u.Id(), 1)
 
@@ -70,7 +71,7 @@ func TestAccountCreateUserAfterDeletion(t *testing.T) {
 		assert.NoError(t, a.Delete())
 
 		// Attempt to create a user.
-		err := a.CreateUser(&User{Username: "johndoe"})
+		err := a.CreateUser(&User{Username: "johndoe", Password: "password"})
 		assert.Equal(t, err, ErrAccountNotFound)
 	})
 }
@@ -81,8 +82,38 @@ func TestAccountCreateUserMissingUsername(t *testing.T) {
 		// Create an account and user.
 		a := &Account{Name: "Foo"}
 		assert.NoError(t, db.CreateAccount(a))
-		err := a.CreateUser(&User{})
+		err := a.CreateUser(&User{Password: "password"})
 		assert.Equal(t, err, ErrUserUsernameRequired)
+	})
+}
+
+// Ensure that creating a user without a password returns an error.
+func TestAccountCreateUserMissingPassword(t *testing.T) {
+	withDB(func(db *DB) {
+		a := &Account{Name: "Foo"}
+		assert.NoError(t, db.CreateAccount(a))
+		err := a.CreateUser(&User{Username: "johndoe"})
+		assert.Equal(t, err, ErrUserPasswordRequired)
+	})
+}
+
+// Ensure that creating a user with a short password returns an error.
+func TestAccountCreateUserPasswordTooShort(t *testing.T) {
+	withDB(func(db *DB) {
+		a := &Account{Name: "Foo"}
+		assert.NoError(t, db.CreateAccount(a))
+		err := a.CreateUser(&User{Username: "johndoe", Password: "abc"})
+		assert.Equal(t, err, ErrUserPasswordTooShort)
+	})
+}
+
+// Ensure that creating a user with a long password returns an error.
+func TestAccountCreateUserPasswordTooLong(t *testing.T) {
+	withDB(func(db *DB) {
+		a := &Account{Name: "Foo"}
+		assert.NoError(t, db.CreateAccount(a))
+		err := a.CreateUser(&User{Username: "johndoe", Password: strings.Repeat("*", 51)})
+		assert.Equal(t, err, ErrUserPasswordTooLong)
 	})
 }
 
@@ -96,11 +127,11 @@ func TestAccountUsers(t *testing.T) {
 		assert.NoError(t, db.CreateAccount(a2))
 
 		// Add users to first account.
-		assert.NoError(t, a1.CreateUser(&User{Username: "johndoe"}))
-		assert.NoError(t, a1.CreateUser(&User{Username: "susyque"}))
+		assert.NoError(t, a1.CreateUser(&User{Username: "johndoe", Password: "password"}))
+		assert.NoError(t, a1.CreateUser(&User{Username: "susyque", Password: "password"}))
 
 		// Add users to second account.
-		assert.NoError(t, a2.CreateUser(&User{Username: "billybob"}))
+		assert.NoError(t, a2.CreateUser(&User{Username: "billybob", Password: "password"}))
 
 		// Check first account users.
 		users, err := a1.Users()

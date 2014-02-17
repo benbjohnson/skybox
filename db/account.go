@@ -101,6 +101,11 @@ func (a *Account) CreateUser(u *User) error {
 		return err
 	}
 
+	// Generate password hash.
+	if err := u.GenerateHash(); err != nil {
+		return err
+	}
+
 	u.db = a.db
 	u.AccountId = a.id
 

@@ -13,7 +13,7 @@ func TestUserUpdate(t *testing.T) {
 		// Create account and user.
 		a := &Account{Name: "Foo"}
 		assert.NoError(t, db.CreateAccount(a))
-		u := &User{Username: "bob"}
+		u := &User{Username: "bob", Password: "password"}
 		assert.NoError(t, a.CreateUser(u))
 
 		// Update the user.
@@ -34,7 +34,7 @@ func TestUserDelete(t *testing.T) {
 		// Create account and user.
 		a := &Account{Name: "Foo"}
 		assert.NoError(t, db.CreateAccount(a))
-		u := &User{Username: "bob"}
+		u := &User{Username: "bob", Password: "password"}
 		assert.NoError(t, a.CreateUser(u))
 
 		// Delete the user.
@@ -43,5 +43,22 @@ func TestUserDelete(t *testing.T) {
 		// Retrieve the user again.
 		_, err := db.User(1)
 		assert.Equal(t, err, ErrUserNotFound)
+	})
+}
+
+// Ensure that a user can be authenticated
+func TestUserAuthenticate(t *testing.T) {
+	withDB(func(db *DB) {
+		// Create account and user.
+		a := &Account{Name: "Foo"}
+		assert.NoError(t, db.CreateAccount(a))
+		u := &User{Username: "bob", Password: "password"}
+		assert.NoError(t, a.CreateUser(u))
+
+		// Authenticate the user with the correct password.
+		assert.Nil(t, u.Authenticate("password"))
+
+		// Return error if authenticating with the wrong password.
+		assert.Equal(t, u.Authenticate("not_the_right_password"), ErrUserNotAuthenticated)
 	})
 }
