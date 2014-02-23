@@ -73,8 +73,7 @@ func (u *User) Validate() error {
 }
 
 func (u *User) get(txn *bolt.Transaction) ([]byte, error) {
-	value, err := txn.Get("users", itob(u.id))
-	assert(err == nil, "get user error: %s", err)
+	value := txn.Bucket("users").Get(itob(u.id))
 	if value == nil {
 		return nil, ErrUserNotFound
 	}
@@ -106,7 +105,7 @@ func (u *User) Save() error {
 
 func (u *User) save(txn *bolt.RWTransaction) error {
 	assert(u.id > 0, "uninitialized user cannot be saved")
-	return txn.Put("users", itob(u.id), marshal(u))
+	return txn.Bucket("users").Put(itob(u.id), marshal(u))
 }
 
 // Delete removes the User from the database.
@@ -118,7 +117,7 @@ func (u *User) Delete() error {
 
 func (u *User) del(txn *bolt.RWTransaction) error {
 	// Remove user entry.
-	err := txn.Delete("users", itob(u.id))
+	err := txn.Bucket("users").Delete(itob(u.id))
 	assert(err == nil, "user delete error: %s", err)
 
 	// Remove user id from indices.

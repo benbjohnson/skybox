@@ -40,8 +40,7 @@ func (a *Account) Validate() error {
 }
 
 func (a *Account) get(txn *bolt.Transaction) ([]byte, error) {
-	value, err := txn.Get("accounts", itob(a.id))
-	assert(err == nil, "get account error: %s", a.id)
+	value := txn.Bucket("accounts").Get(itob(a.id))
 	if value == nil {
 		return nil, ErrAccountNotFound
 	}
@@ -73,7 +72,7 @@ func (a *Account) Save() error {
 
 func (a *Account) save(txn *bolt.RWTransaction) error {
 	assert(a.id > 0, "uninitialized account cannot be saved")
-	return txn.Put("accounts", itob(a.id), marshal(a))
+	return txn.Bucket("accounts").Put(itob(a.id), marshal(a))
 }
 
 // Delete removes the account from the database.
@@ -84,7 +83,7 @@ func (a *Account) Delete() error {
 }
 
 func (a *Account) del(txn *bolt.RWTransaction) error {
-	err := txn.Delete("accounts", itob(a.id))
+	err := txn.Bucket("accounts").Delete(itob(a.id))
 	assert(err == nil, "account delete error: %s", err)
 
 	// TODO: Remove all users.
@@ -121,7 +120,7 @@ func (a *Account) CreateUser(u *User) error {
 		}
 
 		// Generate new id.
-		u.id, _ = txn.NextSequence("users")
+		u.id, _ = txn.Bucket("users").NextSequence()
 		assert(u.id > 0, "user sequence error")
 
 		// Add user id to secondary index.
@@ -171,7 +170,7 @@ func (a *Account) CreateProject(p *Project) error {
 		}
 
 		// Generate new id.
-		p.id, _ = txn.NextSequence("projects")
+		p.id, _ = txn.Bucket("projects").NextSequence()
 		assert(p.id > 0, "project sequence error")
 
 		// Add project id to secondary index.

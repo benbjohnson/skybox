@@ -83,7 +83,7 @@ func (db *DB) CreateAccount(a *Account) error {
 	a.db = db
 	return db.Do(func(txn *bolt.RWTransaction) error {
 		var err error
-		a.id, err = txn.NextSequence("accounts")
+		a.id, err = txn.Bucket("accounts").NextSequence()
 		assert(a.id > 0, "account sequence error: %s", err)
 		return a.save(txn)
 	})

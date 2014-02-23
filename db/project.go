@@ -40,8 +40,7 @@ func (p *Project) Validate() error {
 }
 
 func (p *Project) get(txn *bolt.Transaction) ([]byte, error) {
-	value, err := txn.Get("projects", itob(p.id))
-	assert(err == nil, "get project error: %s", err)
+	value := txn.Bucket("projects").Get(itob(p.id))
 	if value == nil {
 		return nil, ErrProjectNotFound
 	}
@@ -73,7 +72,7 @@ func (p *Project) Save() error {
 
 func (p *Project) save(txn *bolt.RWTransaction) error {
 	assert(p.id > 0, "uninitialized project cannot be saved")
-	return txn.Put("projects", itob(p.id), marshal(p))
+	return txn.Bucket("projects").Put(itob(p.id), marshal(p))
 }
 
 // Delete removes the Project from the database.
@@ -85,7 +84,7 @@ func (p *Project) Delete() error {
 
 func (p *Project) del(txn *bolt.RWTransaction) error {
 	// Remove project entry.
-	err := txn.Delete("projects", itob(p.id))
+	err := txn.Bucket("projects").Delete(itob(p.id))
 	assert(err == nil, "project delete error: %s", err)
 
 	// Remove project id from indices.
