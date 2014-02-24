@@ -60,13 +60,13 @@ func TestAccountUsers(t *testing.T) {
 		users, err := a1.Users()
 		if assert.NoError(t, err) && assert.Equal(t, len(users), 2) {
 			assert.Equal(t, users[0].DB(), db)
-			assert.Equal(t, users[0].Id(), 2)
-			assert.Equal(t, users[0].AccountId, 1)
+			assert.Equal(t, users[0].ID(), 2)
+			assert.Equal(t, users[0].AccountID, 1)
 			assert.Equal(t, users[0].Username, "johndoe")
 
 			assert.Equal(t, users[1].DB(), db)
-			assert.Equal(t, users[1].Id(), 1)
-			assert.Equal(t, users[1].AccountId, 1)
+			assert.Equal(t, users[1].ID(), 1)
+			assert.Equal(t, users[1].AccountID, 1)
 			assert.Equal(t, users[1].Username, "susyque")
 		}
 
@@ -74,8 +74,8 @@ func TestAccountUsers(t *testing.T) {
 		users, err = a2.Users()
 		if assert.NoError(t, err) && assert.Equal(t, len(users), 1) {
 			assert.Equal(t, users[0].DB(), db)
-			assert.Equal(t, users[0].Id(), 3)
-			assert.Equal(t, users[0].AccountId, 2)
+			assert.Equal(t, users[0].ID(), 3)
+			assert.Equal(t, users[0].AccountID, 2)
 			assert.Equal(t, users[0].Username, "billybob")
 		}
 	})
@@ -101,13 +101,13 @@ func TestAccountProjects(t *testing.T) {
 		projects, err := a1.Projects()
 		if assert.NoError(t, err) && assert.Equal(t, len(projects), 2) {
 			assert.Equal(t, projects[0].DB(), db)
-			assert.Equal(t, projects[0].Id(), 2)
-			assert.Equal(t, projects[0].AccountId, 1)
+			assert.Equal(t, projects[0].ID(), 2)
+			assert.Equal(t, projects[0].AccountID, 1)
 			assert.Equal(t, projects[0].Name, "Project X")
 
 			assert.Equal(t, projects[1].DB(), db)
-			assert.Equal(t, projects[1].Id(), 1)
-			assert.Equal(t, projects[1].AccountId, 1)
+			assert.Equal(t, projects[1].ID(), 1)
+			assert.Equal(t, projects[1].AccountID, 1)
 			assert.Equal(t, projects[1].Name, "Project Y")
 		}
 
@@ -115,8 +115,8 @@ func TestAccountProjects(t *testing.T) {
 		projects, err = a2.Projects()
 		if assert.NoError(t, err) && assert.Equal(t, len(projects), 1) {
 			assert.Equal(t, projects[0].DB(), db)
-			assert.Equal(t, projects[0].Id(), 3)
-			assert.Equal(t, projects[0].AccountId, 2)
+			assert.Equal(t, projects[0].ID(), 3)
+			assert.Equal(t, projects[0].AccountID, 2)
 			assert.Equal(t, projects[0].Name, "Project A")
 		}
 	})

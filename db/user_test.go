@@ -16,14 +16,14 @@ func TestUserCreate(t *testing.T) {
 		assert.NoError(t, db.CreateAccount(a))
 		u := &User{Username: "johndoe", Password: "mybirthday"}
 		assert.NoError(t, a.CreateUser(u))
-		assert.Equal(t, u.Id(), 1)
+		assert.Equal(t, u.ID(), 1)
 
 		// Retrieve the user.
 		u2, err := db.User(1)
 		if assert.NoError(t, err) && assert.NotNil(t, u2) {
 			assert.Equal(t, u2.DB(), db)
-			assert.Equal(t, u2.Id(), 1)
-			assert.Equal(t, u2.AccountId, 1)
+			assert.Equal(t, u2.ID(), 1)
+			assert.Equal(t, u2.AccountID, 1)
 			assert.Equal(t, u2.Username, "johndoe")
 		}
 	})

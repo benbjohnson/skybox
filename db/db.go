@@ -21,6 +21,9 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 
 	// Create buckets.
 	err := db.Do(func(txn *bolt.RWTransaction) error {
+		err := txn.CreateBucketIfNotExists("system")
+		assert(err == nil, "system bucket error: %s", err)
+
 		err := txn.CreateBucketIfNotExists("accounts")
 		assert(err == nil, "accounts bucket error: %s", err)
 
@@ -75,7 +78,7 @@ func (db *DB) Accounts() (Accounts, error) {
 
 // CreateAccount creates a new Account in the database.
 func (db *DB) CreateAccount(a *Account) error {
-	assert(a.id == 0, "create account with a non-zero id: %d", a.Id)
+	assert(a.id == 0, "create account with a non-zero id: %d", a.ID)
 	if err := a.Validate(); err != nil {
 		return err
 	}
@@ -120,4 +123,23 @@ func (db *DB) Project(id int) (*Project, error) {
 		return nil, err
 	}
 	return p, nil
+}
+
+// Secret retrieves the secret key used for cookie storage.
+func (db *DB) Secret() ([]byte, error) {
+	var secret []byte
+	err := db.Do(func(t *RWTransaction) error {
+		b := t.Bucket("system")
+		secret = b.Get("secret")
+
+		if secret == nil {
+			var err error
+			secret, err = b.Put("secret", securecookie.GenerateRandomKey(64))
+			assert(err == nil, "secret gen error: %v", err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
 }

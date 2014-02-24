@@ -13,13 +13,23 @@ import (
 // Server represents an HTTP interface to the database.
 type Server struct {
 	http.Server
+	*mux.Router
 	DB       *db.DB
 	listener net.Listener
+	store    sessions.Store
 }
 
 // ListenAndServe opens the server's port and begins listening for requests.
 func (s *Server) ListenAndServe() error {
-	router := mux.NewRouter()
+	// Setup cookie store.
+	secret, err := s.DB.Secret()
+	if err != nil {
+		return err
+	}
+	s.store = sessions.NewCookieStore(secret)
+
+	// Setup routes.
+	s.Router := mux.NewRouter()
 	router.HandleFunc("/assets/{filename}", s.assetHandler).Methods("GET")
 	router.HandleFunc("/", s.indexHandler).Methods("GET")
 	s.Handler = router
@@ -39,10 +49,6 @@ func (s *Server) Close() {
 		s.listener.Close()
 		s.listener = nil
 	}
-}
-
-func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
-	templates.Index(w)
 }
 
 // assetHandler retrieves static files in the "assets" folder.

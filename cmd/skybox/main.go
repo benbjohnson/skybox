@@ -32,11 +32,11 @@ func main() {
 
 	// Initialize path.
 	if *path == "" {
-	    u, err := user.Current()
-	    if err != nil {
-	        log.Fatal(err)
-	    }
-	    *path = filepath.Join(u.HomeDir, ".skybox")
+		u, err := user.Current()
+		if err != nil {
+			log.Fatal(err)
+		}
+		*path = filepath.Join(u.HomeDir, ".skybox")
 	}
 	if err := os.MkdirAll(*path, 0700); err != nil {
 		log.Fatal(err)

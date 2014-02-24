@@ -47,8 +47,8 @@ func getUniqueIndex(txn *bolt.Transaction, name string, key []byte) int {
 // insertIntoUniqueIndex associates a value with an id.
 // Panics if association already exists.
 func insertIntoUniqueIndex(txn *bolt.RWTransaction, name string, key []byte, id int) {
-	currentId := getUniqueIndex(&txn.Transaction, name, key)
-	assert(currentId == 0, "unique index overwrite: %d -> %d", currentId, id)
+	currentID := getUniqueIndex(&txn.Transaction, name, key)
+	assert(currentID == 0, "unique index overwrite: %d -> %d", currentID, id)
 	err := txn.Bucket(name).Put(key, itob(id))
 	assert(err == nil, "unique index insert error: %s", err)
 }

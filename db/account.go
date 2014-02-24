@@ -26,8 +26,8 @@ func (a *Account) DB() *DB {
 	return a.db
 }
 
-// Id returns the account identifier.
-func (a *Account) Id() int {
+// ID returns the account identifier.
+func (a *Account) ID() int {
 	return a.id
 }
 
@@ -94,8 +94,8 @@ func (a *Account) del(txn *bolt.RWTransaction) error {
 
 // CreateUser creates a new User for this account.
 func (a *Account) CreateUser(u *User) error {
-	assert(u.id == 0, "create user with a non-zero id: %d", u.Id)
-	assert(a.id > 0, "create user on unsaved account: %d", a.Id)
+	assert(u.id == 0, "create user with a non-zero id: %d", u.ID)
+	assert(a.id > 0, "create user on unsaved account: %d", a.ID)
 	if err := u.Validate(); err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (a *Account) CreateUser(u *User) error {
 	}
 
 	u.db = a.db
-	u.AccountId = a.id
+	u.AccountID = a.id
 
 	return u.db.Do(func(txn *bolt.RWTransaction) error {
 		// Verify account exists.
@@ -142,7 +142,7 @@ func (a *Account) Users() (Users, error) {
 			u := &User{db: a.db, id: id}
 			err := u.load(txn)
 			assert(err == nil, "user (%d) not found from account.users index (%d)", u.id, a.id)
-			assert(u.AccountId == a.id, "user/account mismatch: %d (%d) not in %d", u.id, u.AccountId, a.id)
+			assert(u.AccountID == a.id, "user/account mismatch: %d (%d) not in %d", u.id, u.AccountID, a.id)
 			users = append(users, u)
 		}
 		return nil
@@ -161,7 +161,7 @@ func (a *Account) CreateProject(p *Project) error {
 	}
 
 	p.db = a.db
-	p.AccountId = a.id
+	p.AccountID = a.id
 
 	return p.db.Do(func(txn *bolt.RWTransaction) error {
 		// Verify account exists.
@@ -191,7 +191,7 @@ func (a *Account) Projects() (Projects, error) {
 			p := &Project{db: a.db, id: id}
 			err := p.load(txn)
 			assert(err == nil, "project (%d) not found from account.projects index (%d)", p.id, a.id)
-			assert(p.AccountId == a.id, "project/account mismatch: %d (%d) not in %d", p.id, p.AccountId, a.id)
+			assert(p.AccountID == a.id, "project/account mismatch: %d (%d) not in %d", p.id, p.AccountID, a.id)
 			projects = append(projects, p)
 		}
 		return nil

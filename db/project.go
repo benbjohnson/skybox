@@ -17,7 +17,7 @@ var (
 type Project struct {
 	db        *DB
 	id        int
-	AccountId int    `json:"accountId"`
+	AccountID int    `json:"accountID"`
 	Name      string `json:"name"`
 }
 
@@ -26,8 +26,8 @@ func (p *Project) DB() *DB {
 	return p.db
 }
 
-// Id returns the project identifier.
-func (p *Project) Id() int {
+// ID returns the project identifier.
+func (p *Project) ID() int {
 	return p.id
 }
 
@@ -88,7 +88,7 @@ func (p *Project) del(txn *bolt.RWTransaction) error {
 	assert(err == nil, "project delete error: %s", err)
 
 	// Remove project id from indices.
-	removeFromForeignKeyIndex(txn, "account.projects", itob(p.AccountId), p.id)
+	removeFromForeignKeyIndex(txn, "account.projects", itob(p.AccountID), p.id)
 
 	return nil
 }

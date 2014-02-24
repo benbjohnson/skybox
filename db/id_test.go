@@ -7,14 +7,14 @@ import (
 )
 
 // Ensure that ids can be sorted.
-func TestIdsSort(t *testing.T) {
+func TestIDsSort(t *testing.T) {
 	s := ids{7, 2, 0, 5}
 	sort.Sort(s)
 	_assert.Equal(t, s, ids{0, 2, 5, 7})
 }
 
 // Ensure that ids are unique.
-func TestIdsInsert(t *testing.T) {
+func TestIDsInsert(t *testing.T) {
 	var ids ids
 	ids = ids.insert(5)
 	ids = ids.insert(2)
@@ -25,7 +25,7 @@ func TestIdsInsert(t *testing.T) {
 }
 
 // Ensure that ids can be removed.
-func TestIdsRemove(t *testing.T) {
+func TestIDsRemove(t *testing.T) {
 	var ids = ids{0, 2, 5, 7}
 	ids = ids.remove(2)
 	ids = ids.remove(7)

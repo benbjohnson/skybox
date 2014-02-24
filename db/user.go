@@ -41,7 +41,7 @@ const (
 type User struct {
 	db        *DB
 	id        int
-	AccountId int    `json:"accountId"`
+	AccountID int    `json:"accountID"`
 	Username  string `json:"username"`
 	Password  string `json:"-"`
 	Hash      []byte `json:"hash"`
@@ -53,9 +53,14 @@ func (u *User) DB() *DB {
 	return u.db
 }
 
-// Id returns the user identifier.
-func (u *User) Id() int {
+// ID returns the user identifier.
+func (u *User) ID() int {
 	return u.id
+}
+
+// Account returns a reference to the user's account.
+func (u *User) Account() (*Account, error) {
+	return u.db.Account(u.AccountID)
 }
 
 // Validate validates all fields of the user.
@@ -121,7 +126,7 @@ func (u *User) del(txn *bolt.RWTransaction) error {
 	assert(err == nil, "user delete error: %s", err)
 
 	// Remove user id from indices.
-	removeFromForeignKeyIndex(txn, "account.users", itob(u.AccountId), u.id)
+	removeFromForeignKeyIndex(txn, "account.users", itob(u.AccountID), u.id)
 	removeFromUniqueIndex(txn, "user.username", []byte(u.Username))
 
 	return nil

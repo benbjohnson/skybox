@@ -15,14 +15,14 @@ func TestProjectCreate(t *testing.T) {
 		assert.NoError(t, db.CreateAccount(a))
 		u := &Project{Name: "Project X"}
 		assert.NoError(t, a.CreateProject(u))
-		assert.Equal(t, u.Id(), 1)
+		assert.Equal(t, u.ID(), 1)
 
 		// Retrieve the project.
 		u2, err := db.Project(1)
 		if assert.NoError(t, err) && assert.NotNil(t, u2) {
 			assert.Equal(t, u2.DB(), db)
-			assert.Equal(t, u2.Id(), 1)
-			assert.Equal(t, u2.AccountId, 1)
+			assert.Equal(t, u2.ID(), 1)
+			assert.Equal(t, u2.AccountID, 1)
 			assert.Equal(t, u2.Name, "Project X")
 		}
 	})

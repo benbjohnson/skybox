@@ -17,7 +17,7 @@ func TestDBCreateAccount(t *testing.T) {
 		err := db.CreateAccount(a)
 		assert.NoError(t, err)
 		assert.Equal(t, db, a.DB())
-		assert.Equal(t, a.Id(), 1)
+		assert.Equal(t, a.ID(), 1)
 
 		// Retrieve the account.
 		a2, err := db.Account(1)
@@ -57,15 +57,15 @@ func TestDBAccounts(t *testing.T) {
 		accounts, err := db.Accounts()
 		if assert.NoError(t, err) && assert.Equal(t, len(accounts), 3) {
 			assert.Equal(t, accounts[0].DB(), db)
-			assert.Equal(t, accounts[0].Id(), 2)
+			assert.Equal(t, accounts[0].ID(), 2)
 			assert.Equal(t, accounts[0].Name, "Bar")
 
 			assert.Equal(t, accounts[1].DB(), db)
-			assert.Equal(t, accounts[1].Id(), 3)
+			assert.Equal(t, accounts[1].ID(), 3)
 			assert.Equal(t, accounts[1].Name, "Baz")
 
 			assert.Equal(t, accounts[2].DB(), db)
-			assert.Equal(t, accounts[2].Id(), 1)
+			assert.Equal(t, accounts[2].ID(), 1)
 			assert.Equal(t, accounts[2].Name, "Foo")
 		}
 	})
@@ -91,7 +91,7 @@ func TestDBUserByUsername(t *testing.T) {
 
 		// Find user.
 		u, _ := db.UserByUsername("susyque")
-		assert.Equal(t, u.Id(), 2)
+		assert.Equal(t, u.ID(), 2)
 
 		// Delete user and find.
 		assert.NoError(t, u.Delete())
@@ -101,7 +101,7 @@ func TestDBUserByUsername(t *testing.T) {
 		// Re-add and find again.
 		assert.NoError(t, a.CreateUser(&User{Username: "susyque", Password: "foobar"}))
 		u, _ = db.UserByUsername("susyque")
-		assert.Equal(t, u.Id(), 3)
+		assert.Equal(t, u.ID(), 3)
 	})
 }
 
