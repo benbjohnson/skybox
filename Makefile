@@ -25,7 +25,7 @@ run: assets templates
 	@go run ./cmd/skybox/main.go
 
 templates:
-	@ego server/templates
+	@ego server/template
 
 test: assets templates fmt
 	@go test -v -test.run=$(TEST) ./...

@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/boltdb/bolt"
+	"github.com/gorilla/securecookie"
 )
 
 // DB represents a Bolt-backed data store.
@@ -24,7 +25,7 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 		err := txn.CreateBucketIfNotExists("system")
 		assert(err == nil, "system bucket error: %s", err)
 
-		err := txn.CreateBucketIfNotExists("accounts")
+		err = txn.CreateBucketIfNotExists("accounts")
 		assert(err == nil, "accounts bucket error: %s", err)
 
 		err = txn.CreateBucketIfNotExists("account.users")
@@ -128,15 +129,16 @@ func (db *DB) Project(id int) (*Project, error) {
 // Secret retrieves the secret key used for cookie storage.
 func (db *DB) Secret() ([]byte, error) {
 	var secret []byte
-	err := db.Do(func(t *RWTransaction) error {
+	err := db.Do(func(t *bolt.RWTransaction) error {
 		b := t.Bucket("system")
-		secret = b.Get("secret")
+		secret = b.Get([]byte("secret"))
 
 		if secret == nil {
-			var err error
-			secret, err = b.Put("secret", securecookie.GenerateRandomKey(64))
+			secret = securecookie.GenerateRandomKey(64)
+			err := b.Put([]byte("secret"), secret)
 			assert(err == nil, "secret gen error: %v", err)
 		}
+		return nil
 	})
 	if err != nil {
 		return nil, err

@@ -1,26 +1,27 @@
 package server
 
 import (
-	"github.com/benbjohnson/skybox/db"
+	"net/http"
+
+	"github.com/benbjohnson/skybox/server/template"
 )
 
 type projectsHandler struct {
-	*handler
+	handler
 }
 
-func newProjectsHandler(s *Server) {
-	return &projectsHandler{handler: newHandler(s)}
+func newProjectsHandler(s *Server) *projectsHandler {
+	return &projectsHandler{handler: handler{s}}
 }
 
 func (h *projectsHandler) install() {
-	s.HandleFunc("/projects", h.authorize(h.index)).Methods("GET")
+	h.server.Handle("/projects", h.authorize(http.HandlerFunc(h.index))).Methods("GET")
 }
 
 func (h *projectsHandler) index(w http.ResponseWriter, r *http.Request) {
 	// TODO(benbjohnson): Wrap in transaction (db.Transaction, db.RWTransaction).
-	user, _ := h.user(r)
-	account, _ := user.Account()
+	user, account := h.auth(r)
 	projects, _ := account.Projects()
-	t := templates.NewProjectTemplate(user, account, projects)
+	t := &template.ProjectsTemplate{template.New(user, account), projects}
 	t.Index(w)
 }

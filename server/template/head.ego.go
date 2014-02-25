@@ -1,4 +1,4 @@
-package templates
+package template
 
 //line head.ego:3
 import (
@@ -7,7 +7,7 @@ import (
 )
 
 //line head.ego:1
-func Head(w io.Writer, title string) error {
+func (t *Template) Head(w io.Writer, title string) error {
 //line head.ego:2
 	if _, err := fmt.Fprintf(w, "\n\n"); err != nil {
 		return err

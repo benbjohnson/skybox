@@ -1,4 +1,4 @@
-<%! func Head(w io.Writer, title string) error %>
+<%! func (t *Template) Head(w io.Writer, title string) error %>
 
 <%%
 import (

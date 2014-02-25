@@ -1,4 +1,4 @@
-package templates
+package template
 
 //line nav.ego:2
 import (
@@ -7,7 +7,7 @@ import (
 )
 
 //line nav.ego:1
-func Nav(w io.Writer) error {
+func (t *Template) Nav(w io.Writer) error {
 //line nav.ego:2
 	if _, err := fmt.Fprintf(w, "\n"); err != nil {
 		return err

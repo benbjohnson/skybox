@@ -1,4 +1,4 @@
-<%! func Index(w io.Writer) error %>
+<%! func (t *Template) Index(w io.Writer) error %>
 
 <%%
 import (
@@ -9,11 +9,11 @@ import (
 
 <!DOCTYPE html>
 <html lang="en">
-  <% Head(w, "") %>
+  <% t.Head(w, "") %>
 
   <body>
     <div class="container">
-      <% Nav(w) %>
+      <% t.Nav(w) %>
 
       <!-- Main component for a primary marketing message or call to action -->
       <div class="jumbotron">

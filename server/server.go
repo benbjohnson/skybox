@@ -6,8 +6,8 @@ import (
 	"path"
 
 	"github.com/benbjohnson/skybox/db"
-	"github.com/benbjohnson/skybox/server/templates"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 )
 
 // Server represents an HTTP interface to the database.
@@ -29,10 +29,11 @@ func (s *Server) ListenAndServe() error {
 	s.store = sessions.NewCookieStore(secret)
 
 	// Setup routes.
-	s.Router := mux.NewRouter()
-	router.HandleFunc("/assets/{filename}", s.assetHandler).Methods("GET")
-	router.HandleFunc("/", s.indexHandler).Methods("GET")
-	s.Handler = router
+	s.Router = mux.NewRouter()
+	s.Handler = s.Router
+	s.HandleFunc("/assets/{filename}", s.assetHandler).Methods("GET")
+	(&homeHandler{handler{s}}).install()
+	(&projectsHandler{handler{s}}).install()
 
 	// Start listening on the socket.
 	listener, err := net.Listen("tcp", s.Addr)

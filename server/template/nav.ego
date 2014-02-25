@@ -1,4 +1,4 @@
-<%! func Nav(w io.Writer) error %>
+<%! func (t *Template) Nav(w io.Writer) error %>
 <%%
 import (
   "fmt"
