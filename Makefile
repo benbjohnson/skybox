@@ -19,7 +19,7 @@ cover: fmt
 	rm $(COVERPROFILE)
 
 fmt:
-	@go fmt ./...
+	@go fmt $(PKG)
 
 run: assets templates
 	@go run ./cmd/skybox/main.go
@@ -28,6 +28,6 @@ templates:
 	@ego server/template
 
 test: assets templates fmt
-	@go test -v -test.run=$(TEST) ./...
+	@go test -v -test.run=$(TEST) $(PKG)
 
 .PHONY: assets bench cloc cover fmt run templates test

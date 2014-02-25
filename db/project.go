@@ -1,9 +1,5 @@
 package db
 
-import (
-	"github.com/boltdb/bolt"
-)
-
 var (
 	// ErrProjectNotFound is returned when a project does not exist.
 	ErrProjectNotFound = &Error{"project not found", nil}
@@ -15,15 +11,10 @@ var (
 // Project represents a collection of Persons and their events.
 // A Project belongs to an Account.
 type Project struct {
-	db        *DB
-	id        int
-	AccountID int    `json:"accountID"`
-	Name      string `json:"name"`
-}
-
-// DB returns the database that created the project.
-func (p *Project) DB() *DB {
-	return p.db
+	Transaction *Transaction
+	id          int
+	AccountID   int    `json:"accountID"`
+	Name        string `json:"name"`
 }
 
 // ID returns the project identifier.
@@ -39,8 +30,8 @@ func (p *Project) Validate() error {
 	return nil
 }
 
-func (p *Project) get(txn *bolt.Transaction) ([]byte, error) {
-	value := txn.Bucket("projects").Get(itob(p.id))
+func (p *Project) get() ([]byte, error) {
+	value := p.Transaction.Bucket("projects").Get(itob(p.id))
 	if value == nil {
 		return nil, ErrProjectNotFound
 	}
@@ -49,13 +40,7 @@ func (p *Project) get(txn *bolt.Transaction) ([]byte, error) {
 
 // Load retrieves a project from the database.
 func (p *Project) Load() error {
-	return p.db.With(func(txn *bolt.Transaction) error {
-		return p.load(txn)
-	})
-}
-
-func (p *Project) load(txn *bolt.Transaction) error {
-	value, err := p.get(txn)
+	value, err := p.get()
 	if err != nil {
 		return err
 	}
@@ -65,30 +50,18 @@ func (p *Project) load(txn *bolt.Transaction) error {
 
 // Save commits the Project to the database.
 func (p *Project) Save() error {
-	return p.db.Do(func(txn *bolt.RWTransaction) error {
-		return p.save(txn)
-	})
-}
-
-func (p *Project) save(txn *bolt.RWTransaction) error {
 	assert(p.id > 0, "uninitialized project cannot be saved")
-	return txn.Bucket("projects").Put(itob(p.id), marshal(p))
+	return p.Transaction.Bucket("projects").Put(itob(p.id), marshal(p))
 }
 
 // Delete removes the Project from the database.
 func (p *Project) Delete() error {
-	return p.db.Do(func(txn *bolt.RWTransaction) error {
-		return p.del(txn)
-	})
-}
-
-func (p *Project) del(txn *bolt.RWTransaction) error {
 	// Remove project entry.
-	err := txn.Bucket("projects").Delete(itob(p.id))
+	err := p.Transaction.Bucket("projects").Delete(itob(p.id))
 	assert(err == nil, "project delete error: %s", err)
 
 	// Remove project id from indices.
-	removeFromForeignKeyIndex(txn, "account.projects", itob(p.AccountID), p.id)
+	removeFromForeignKeyIndex(p.Transaction, "account.projects", itob(p.AccountID), p.id)
 
 	return nil
 }

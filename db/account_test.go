@@ -11,16 +11,21 @@ import (
 func TestAccountUpdate(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create and update account.
-		a := &Account{Name: "Foo"}
-		assert.NoError(t, db.CreateAccount(a))
-		a.Name = "Bar"
-		assert.NoError(t, a.Save())
+		err := db.Do(func(txn *Transaction) error {
+			a := &Account{Name: "Foo"}
+			assert.NoError(t, txn.CreateAccount(a))
+			a.Name = "Bar"
+			return a.Save()
+		})
+		assert.NoError(t, err)
 
 		// Retrieve the account.
-		a2, err := db.Account(1)
-		if assert.NoError(t, err) && assert.NotNil(t, a2) {
-			assert.Equal(t, a2.Name, "Bar")
-		}
+		db.With(func(txn *Transaction) error {
+			a2, err := txn.Account(1)
+			if assert.NoError(t, err) && assert.NotNil(t, a2) {
+				assert.Equal(t, a2.Name, "Bar")
+			}
+		})
 	})
 }
 
@@ -28,14 +33,23 @@ func TestAccountUpdate(t *testing.T) {
 func TestAccountDelete(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create account.
-		assert.NoError(t, db.CreateAccount(&Account{Name: "Foo"}))
+		err := db.Do(func(txn *Transaction) error {
+			return txn.CreateAccount(&Account{Name: "Foo"})
+		})
+		assert.NoError(t, err)
 
 		// Retrieve and delete account.
-		a, _ := db.Account(1)
-		assert.NoError(t, a.Delete())
+		err = db.Do(func(txn *Transaction) error {
+			a, _ := txn.Account(1)
+			return a.Delete()
+		})
+		assert.NoError(t, err)
 
 		// Retrieve the account again.
-		_, err := db.Account(1)
+		err = db.With(func(txn *Transaction) error {
+			_, err := txn.Account(1)
+			return err
+		})
 		assert.Equal(t, err, ErrAccountNotFound)
 	})
 }
@@ -44,17 +58,25 @@ func TestAccountDelete(t *testing.T) {
 func TestAccountUsers(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create two accounts.
-		a1 := &Account{Name: "foo"}
-		assert.NoError(t, db.CreateAccount(a1))
-		a2 := &Account{Name: "bar"}
-		assert.NoError(t, db.CreateAccount(a2))
+		err := db.Do(func(txn *Transaction) error {
+			a1 := &Account{Name: "foo"}
+			assert.NoError(t, db.CreateAccount(a1))
+			a2 := &Account{Name: "bar"}
+			assert.NoError(t, db.CreateAccount(a2))
+			return nil
+		})
 
 		// Add users to first account.
-		assert.NoError(t, a1.CreateUser(&User{Username: "susyque", Password: "password"}))
-		assert.NoError(t, a1.CreateUser(&User{Username: "johndoe", Password: "password"}))
+		err = db.Do(func(txn *Transaction) error {
+			assert.NoError(t, a1.CreateUser(&User{Username: "susyque", Password: "password"}))
+			assert.NoError(t, a1.CreateUser(&User{Username: "johndoe", Password: "password"}))
+			return nil
+		})
 
 		// Add users to second account.
-		assert.NoError(t, a2.CreateUser(&User{Username: "billybob", Password: "password"}))
+		err = db.Do(func(txn *Transaction) error {
+			assert.NoError(t, a2.CreateUser(&User{Username: "billybob", Password: "password"}))
+		})
 
 		// Check first account users.
 		users, err := a1.Users()

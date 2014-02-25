@@ -2,7 +2,6 @@ package db
 
 import (
 	"code.google.com/p/go.crypto/bcrypt"
-	"github.com/boltdb/bolt"
 )
 
 var (
@@ -39,18 +38,13 @@ const (
 // User represents a user within the system.
 // A User belongs to an Account and can access all Projects within the Account.
 type User struct {
-	db        *DB
-	id        int
-	AccountID int    `json:"accountID"`
-	Username  string `json:"username"`
-	Password  string `json:"-"`
-	Hash      []byte `json:"hash"`
-	Email     string `json:"email"`
-}
-
-// DB returns the database that created the user.
-func (u *User) DB() *DB {
-	return u.db
+	Transaction *Transaction
+	id          int
+	AccountID   int    `json:"accountID"`
+	Username    string `json:"username"`
+	Password    string `json:"-"`
+	Hash        []byte `json:"hash"`
+	Email       string `json:"email"`
 }
 
 // ID returns the user identifier.
@@ -60,7 +54,7 @@ func (u *User) ID() int {
 
 // Account returns a reference to the user's account.
 func (u *User) Account() (*Account, error) {
-	return u.db.Account(u.AccountID)
+	return u.Transaction.Account(u.AccountID)
 }
 
 // Validate validates all fields of the user.
@@ -77,8 +71,8 @@ func (u *User) Validate() error {
 	return nil
 }
 
-func (u *User) get(txn *bolt.Transaction) ([]byte, error) {
-	value := txn.Bucket("users").Get(itob(u.id))
+func (u *User) get() ([]byte, error) {
+	value := u.Transaction.Bucket("users").Get(itob(u.id))
 	if value == nil {
 		return nil, ErrUserNotFound
 	}
@@ -87,13 +81,7 @@ func (u *User) get(txn *bolt.Transaction) ([]byte, error) {
 
 // Load retrieves a user from the database.
 func (u *User) Load() error {
-	return u.db.With(func(txn *bolt.Transaction) error {
-		return u.load(txn)
-	})
-}
-
-func (u *User) load(txn *bolt.Transaction) error {
-	value, err := u.get(txn)
+	value, err := u.get()
 	if err != nil {
 		return err
 	}
@@ -103,31 +91,19 @@ func (u *User) load(txn *bolt.Transaction) error {
 
 // Save commits the User to the database.
 func (u *User) Save() error {
-	return u.db.Do(func(txn *bolt.RWTransaction) error {
-		return u.save(txn)
-	})
-}
-
-func (u *User) save(txn *bolt.RWTransaction) error {
 	assert(u.id > 0, "uninitialized user cannot be saved")
-	return txn.Bucket("users").Put(itob(u.id), marshal(u))
+	return u.Transaction.Bucket("users").Put(itob(u.id), marshal(u))
 }
 
 // Delete removes the User from the database.
 func (u *User) Delete() error {
-	return u.db.Do(func(txn *bolt.RWTransaction) error {
-		return u.del(txn)
-	})
-}
-
-func (u *User) del(txn *bolt.RWTransaction) error {
 	// Remove user entry.
-	err := txn.Bucket("users").Delete(itob(u.id))
+	err := u.Transaction.Bucket("users").Delete(itob(u.id))
 	assert(err == nil, "user delete error: %s", err)
 
 	// Remove user id from indices.
-	removeFromForeignKeyIndex(txn, "account.users", itob(u.AccountID), u.id)
-	removeFromUniqueIndex(txn, "user.username", []byte(u.Username))
+	removeFromForeignKeyIndex(u.Transaction, "account.users", itob(u.AccountID), u.id)
+	removeFromUniqueIndex(u.Transaction, "user.username", []byte(u.Username))
 
 	return nil
 }
