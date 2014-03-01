@@ -21,6 +21,6 @@ func (h *projectsHandler) install() {
 func (h *projectsHandler) index(w http.ResponseWriter, r *http.Request) {
 	user, account := h.auth(r)
 	projects, _ := account.Projects()
-	t := &template.ProjectsTemplate{template.New(user, account), projects}
+	t := &template.ProjectsTemplate{template.New(h.session(r), user, account), projects}
 	t.Index(w)
 }

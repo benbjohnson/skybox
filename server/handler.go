@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/benbjohnson/skybox/db"
+	"github.com/gorilla/sessions"
 )
 
 type handler struct {
@@ -25,6 +26,9 @@ func (h *handler) transaction(r *http.Request) *db.Transaction {
 func (h *handler) setTransaction(r *http.Request, t *db.Transaction) {
 	h.Lock()
 	defer h.Unlock()
+	if h.transactions == nil {
+		h.transactions = make(map[*http.Request]*db.Transaction)
+	}
 	h.transactions[r] = t
 }
 
@@ -49,10 +53,16 @@ func (h *handler) authorize(handler http.Handler) http.Handler {
 	return &authorizer{parent: h, handler: handler}
 }
 
+// session returns the current session.
+func (h *handler) session(r *http.Request) *sessions.Session {
+	session, _ := h.server.store.Get(r, "default")
+	return session
+}
+
 // auth returns the logged in user and account for a given request.
 func (h *handler) auth(r *http.Request) (*db.User, *db.Account) {
 	txn := h.transaction(r)
-	session, _ := h.server.store.Get(r, "default")
+	session := h.session(r)
 	id, ok := session.Values["UserID"]
 	if !ok {
 		return nil, nil
@@ -111,7 +121,7 @@ type authorizer struct {
 func (a *authorizer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	session, _ := a.parent.server.store.Get(req, "default")
 	if _, ok := session.Values["UserID"]; !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Redirect(w, req, "/login", http.StatusFound)
 		return
 	}
 	a.handler.ServeHTTP(w, req)
