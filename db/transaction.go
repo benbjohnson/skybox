@@ -43,10 +43,10 @@ func (t *Transaction) User(id int) (*User, error) {
 	return u, nil
 }
 
-// UserByUsername retrieves a User from the database with the given username.
-func (t *Transaction) UserByUsername(username string) (*User, error) {
+// UserByEmail retrieves a User from the database with the given Email.
+func (t *Transaction) UserByEmail(email string) (*User, error) {
 	u := &User{Transaction: t}
-	if u.id = getUniqueIndex(t, "user.username", []byte(username)); u.id == 0 {
+	if u.id = getUniqueIndex(t, "user.email", []byte(email)); u.id == 0 {
 		return nil, ErrUserNotFound
 	}
 	if err := u.Load(); err != nil {

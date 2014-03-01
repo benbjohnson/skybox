@@ -11,7 +11,7 @@ import (
 <html lang="en">
   <% t.Head(w, "") %>
 
-  <body>
+  <body id="index">
     <div class="container">
       <% t.Nav(w) %>
 

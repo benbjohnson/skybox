@@ -12,7 +12,7 @@ func TestDBCreateAccount(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create an account.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			err := txn.CreateAccount(a)
 			assert.NoError(t, err)
 			assert.Equal(t, txn, a.Transaction)
@@ -22,20 +22,9 @@ func TestDBCreateAccount(t *testing.T) {
 			a2, err := txn.Account(1)
 			if assert.NoError(t, err) && assert.NotNil(t, a2) {
 				assert.Equal(t, txn, a2.Transaction)
-				assert.Equal(t, a2.Name, "Foo")
+				assert.Equal(t, a2.ID(), 1)
 			}
 			assert.True(t, a != a2)
-			return nil
-		})
-	})
-}
-
-// Ensure that the database will reject an invalid account.
-func TestDBCreateInvalidAccount(t *testing.T) {
-	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
-			err := txn.CreateAccount(&Account{})
-			assert.Equal(t, err, ErrAccountNameRequired)
 			return nil
 		})
 	})
@@ -57,24 +46,21 @@ func TestDBAccountNotFound(t *testing.T) {
 func TestDBAccounts(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
-			txn.CreateAccount(&Account{Name: "Foo"})
-			txn.CreateAccount(&Account{Name: "Bar"})
-			txn.CreateAccount(&Account{Name: "Baz"})
+			txn.CreateAccount(&Account{})
+			txn.CreateAccount(&Account{})
+			txn.CreateAccount(&Account{})
 
 			// Retrieve the accounts.
 			accounts, err := txn.Accounts()
 			if assert.NoError(t, err) && assert.Equal(t, len(accounts), 3) {
 				assert.Equal(t, accounts[0].Transaction, txn)
-				assert.Equal(t, accounts[0].ID(), 2)
-				assert.Equal(t, accounts[0].Name, "Bar")
+				assert.Equal(t, accounts[0].ID(), 1)
 
 				assert.Equal(t, accounts[1].Transaction, txn)
-				assert.Equal(t, accounts[1].ID(), 3)
-				assert.Equal(t, accounts[1].Name, "Baz")
+				assert.Equal(t, accounts[1].ID(), 2)
 
 				assert.Equal(t, accounts[2].Transaction, txn)
-				assert.Equal(t, accounts[2].ID(), 1)
-				assert.Equal(t, accounts[2].Name, "Foo")
+				assert.Equal(t, accounts[2].ID(), 3)
 			}
 			return nil
 		})
@@ -93,28 +79,28 @@ func TestDBUserNotFound(t *testing.T) {
 	})
 }
 
-// Ensure that the database can retrieve a user by username.
-func TestDBUserByUsername(t *testing.T) {
+// Ensure that the database can retrieve a user by email.
+func TestDBUserByEmail(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Add account and users.
-			a := &Account{Name: "foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			assert.NoError(t, a.CreateUser(&User{Username: "johndoe", Password: "password"}))
-			assert.NoError(t, a.CreateUser(&User{Username: "susyque", Password: "password"}))
+			assert.NoError(t, a.CreateUser(&User{Email: "johndoe@gmail.com", Password: "password"}))
+			assert.NoError(t, a.CreateUser(&User{Email: "susyque@gmail.com", Password: "password"}))
 
 			// Find user.
-			u, _ := txn.UserByUsername("susyque")
+			u, _ := txn.UserByEmail("susyque@gmail.com")
 			assert.Equal(t, u.ID(), 2)
 
 			// Delete user and find.
 			assert.NoError(t, u.Delete())
-			_, err := txn.UserByUsername("susyque")
+			_, err := txn.UserByEmail("susyque@gmail.com")
 			assert.Equal(t, err, ErrUserNotFound)
 
 			// Re-add and find again.
-			assert.NoError(t, a.CreateUser(&User{Username: "susyque", Password: "foobar"}))
-			u, _ = txn.UserByUsername("susyque")
+			assert.NoError(t, a.CreateUser(&User{Email: "susyque@gmail.com", Password: "foobar"}))
+			u, _ = txn.UserByEmail("susyque@gmail.com")
 			assert.Equal(t, u.ID(), 3)
 			return nil
 		})

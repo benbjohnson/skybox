@@ -1,4 +1,4 @@
-<%! func (t *Template) Login(w io.Writer) error %>
+<%! func (t *Template) Signup(w io.Writer) error %>
 
 <%%
 import (
@@ -11,26 +11,26 @@ import (
 <html lang="en">
   <% t.Head(w, "") %>
 
-  <body id="login">
+  <body id="signup">
     <div class="container">
       <% t.Nav(w) %>
       <% t.Flash(w) %>
 
       <div class="panel panel-default">
         <div class="panel-heading">
-          <h3 class="panel-title">Sign In</h3>
+          <h3 class="panel-title">Sign Up</h3>
         </div>
         <div class="panel-body">
-          <form role="form" action="/login" method="POST">
+          <form role="form" action="/signup" method="POST">
             <div class="form-group">
               <label for="email">E-mail address</label>
-              <input type="text" class="form-control" id="email" name="email" placeholder="Enter e-mail address">
+              <input type="text" class="form-control" id="email" name="email" placeholder="Enter your e-mail address">
             </div>
             <div class="form-group">
               <label for="password">Password</label>
-              <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+              <input type="password" class="form-control" id="password" name="password" placeholder="Choose a password">
             </div>
-            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+            <button class="btn btn-lg btn-success btn-block" type="submit">Sign up</button>
           </div>
         </div>
       </div>

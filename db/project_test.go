@@ -12,7 +12,7 @@ func TestProjectCreate(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create an account and project.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
 			u := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(u))
@@ -36,7 +36,7 @@ func TestProjectCreateAfterDeletion(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create an account and delete it.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
 			assert.NoError(t, a.Delete())
 
@@ -52,7 +52,7 @@ func TestProjectCreateAfterDeletion(t *testing.T) {
 func TestProjectCreateMissingName(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
 			assert.Equal(t, a.CreateProject(&Project{}), ErrProjectNameRequired)
 			return nil
@@ -65,7 +65,7 @@ func TestProjectUpdate(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create account and project.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
 			p := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(p))
@@ -89,7 +89,7 @@ func TestProjectDelete(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create account and project.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
 			p := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(p))

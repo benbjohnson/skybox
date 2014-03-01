@@ -36,8 +36,8 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 		err = txn.CreateBucketIfNotExists("users")
 		assert(err == nil, "users bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("user.username")
-		assert(err == nil, "user.username bucket error: %s", err)
+		err = txn.CreateBucketIfNotExists("user.email")
+		assert(err == nil, "user.email bucket error: %s", err)
 
 		err = txn.CreateBucketIfNotExists("projects")
 		assert(err == nil, "projects bucket error: %s", err)

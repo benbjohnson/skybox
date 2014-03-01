@@ -1,0 +1,10 @@
+<%! func (t *Template) Flash(w io.Writer) error %>
+
+<%% import "fmt" %%>
+<%% import "io" %%>
+
+<% if t.Session != nil { %>
+  <% for _, flash := range t.Session.Flashes() { %>
+    <p class="bg-danger"><%= fmt.Sprintf("%v", flash) %></p>
+  <% } %>
+<% } %>

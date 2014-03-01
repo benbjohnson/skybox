@@ -4,7 +4,7 @@ BENCH=.
 COVERPROFILE=/tmp/c.out
 
 assets: less
-	cd server && go-bindata -pkg=server -prefix=assets/ assets
+	@cd server && go-bindata -pkg=server -prefix=assets/ assets
 
 bench:
 	go test -v -test.bench=$(BENCH)

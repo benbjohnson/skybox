@@ -8,11 +8,11 @@ var (
 	// ErrUserNotFound is returned when a user does not exist.
 	ErrUserNotFound = &Error{"user not found", nil}
 
-	// ErrUserUsernameRequired is returned when a user has a blank username.
-	ErrUserUsernameRequired = &Error{"user username required", nil}
+	// ErrUserEmailRequired is returned when a user has a blank email.
+	ErrUserEmailRequired = &Error{"user email required", nil}
 
-	// ErrUserUsernameTaken is returned when a username already exists.
-	ErrUserUsernameTaken = &Error{"user username is already taken", nil}
+	// ErrUserEmailTaken is returned when a email already exists.
+	ErrUserEmailTaken = &Error{"user email already in use", nil}
 
 	// ErrUserPasswordRequired is returned when a user has a blank password.
 	ErrUserPasswordRequired = &Error{"user password required", nil}
@@ -41,10 +41,9 @@ type User struct {
 	Transaction *Transaction
 	id          int
 	AccountID   int    `json:"accountID"`
-	Username    string `json:"username"`
+	Email       string `json:"email"`
 	Password    string `json:"-"`
 	Hash        []byte `json:"hash"`
-	Email       string `json:"email"`
 }
 
 // ID returns the user identifier.
@@ -59,8 +58,8 @@ func (u *User) Account() (*Account, error) {
 
 // Validate validates all fields of the user.
 func (u *User) Validate() error {
-	if len(u.Username) == 0 {
-		return ErrUserUsernameRequired
+	if len(u.Email) == 0 {
+		return ErrUserEmailRequired
 	} else if u.id == 0 && len(u.Password) == 0 {
 		return ErrUserPasswordRequired
 	} else if len(u.Password) < MinPasswordLength {
@@ -103,7 +102,7 @@ func (u *User) Delete() error {
 
 	// Remove user id from indices.
 	removeFromForeignKeyIndex(u.Transaction, "account.users", itob(u.AccountID), u.id)
-	removeFromUniqueIndex(u.Transaction, "user.username", []byte(u.Username))
+	removeFromUniqueIndex(u.Transaction, "user.email", []byte(u.Email))
 
 	return nil
 }
@@ -130,4 +129,4 @@ type Users []*User
 
 func (s Users) Len() int           { return len(s) }
 func (s Users) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s Users) Less(i, j int) bool { return s[i].Username < s[j].Username }
+func (s Users) Less(i, j int) bool { return s[i].Email < s[j].Email }

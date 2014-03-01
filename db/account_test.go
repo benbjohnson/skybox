@@ -7,35 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Ensure that an account can update itself.
-func TestAccountUpdate(t *testing.T) {
-	withDB(func(db *DB) {
-		// Create and update account.
-		err := db.Do(func(txn *Transaction) error {
-			a := &Account{Name: "Foo"}
-			assert.NoError(t, txn.CreateAccount(a))
-			a.Name = "Bar"
-			return a.Save()
-		})
-		assert.NoError(t, err)
-
-		// Retrieve the account.
-		db.With(func(txn *Transaction) error {
-			a2, err := txn.Account(1)
-			if assert.NoError(t, err) && assert.NotNil(t, a2) {
-				assert.Equal(t, a2.Name, "Bar")
-			}
-			return nil
-		})
-	})
-}
-
 // Ensure that an account can be deleted.
 func TestAccountDelete(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create account.
 		err := db.Do(func(txn *Transaction) error {
-			return txn.CreateAccount(&Account{Name: "Foo"})
+			return txn.CreateAccount(&Account{})
 		})
 		assert.NoError(t, err)
 
@@ -60,9 +37,9 @@ func TestAccountUsers(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create two accounts.
 		db.Do(func(txn *Transaction) error {
-			a1 := &Account{Name: "foo"}
+			a1 := &Account{}
 			assert.NoError(t, txn.CreateAccount(a1))
-			a2 := &Account{Name: "bar"}
+			a2 := &Account{}
 			assert.NoError(t, txn.CreateAccount(a2))
 			return nil
 		})
@@ -70,15 +47,15 @@ func TestAccountUsers(t *testing.T) {
 		// Add users to first account.
 		db.Do(func(txn *Transaction) error {
 			a1, _ := txn.Account(1)
-			assert.NoError(t, a1.CreateUser(&User{Username: "susyque", Password: "password"}))
-			assert.NoError(t, a1.CreateUser(&User{Username: "johndoe", Password: "password"}))
+			assert.NoError(t, a1.CreateUser(&User{Email: "susyque@gmail.com", Password: "password"}))
+			assert.NoError(t, a1.CreateUser(&User{Email: "johndoe@gmail.com", Password: "password"}))
 			return nil
 		})
 
 		// Add users to second account.
 		db.Do(func(txn *Transaction) error {
 			a2, _ := txn.Account(2)
-			assert.NoError(t, a2.CreateUser(&User{Username: "billybob", Password: "password"}))
+			assert.NoError(t, a2.CreateUser(&User{Email: "billybob@gmail.com", Password: "password"}))
 			return nil
 		})
 
@@ -90,12 +67,12 @@ func TestAccountUsers(t *testing.T) {
 				assert.Equal(t, users[0].Transaction, txn)
 				assert.Equal(t, users[0].ID(), 2)
 				assert.Equal(t, users[0].AccountID, 1)
-				assert.Equal(t, users[0].Username, "johndoe")
+				assert.Equal(t, users[0].Email, "johndoe@gmail.com")
 
 				assert.Equal(t, users[1].Transaction, txn)
 				assert.Equal(t, users[1].ID(), 1)
 				assert.Equal(t, users[1].AccountID, 1)
-				assert.Equal(t, users[1].Username, "susyque")
+				assert.Equal(t, users[1].Email, "susyque@gmail.com")
 			}
 			return nil
 		})
@@ -108,7 +85,7 @@ func TestAccountUsers(t *testing.T) {
 				assert.Equal(t, users[0].Transaction, txn)
 				assert.Equal(t, users[0].ID(), 3)
 				assert.Equal(t, users[0].AccountID, 2)
-				assert.Equal(t, users[0].Username, "billybob")
+				assert.Equal(t, users[0].Email, "billybob@gmail.com")
 			}
 			return nil
 		})
@@ -120,9 +97,9 @@ func TestAccountProjects(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create two accounts.
 		db.Do(func(txn *Transaction) error {
-			a1 := &Account{Name: "foo"}
+			a1 := &Account{}
 			assert.NoError(t, txn.CreateAccount(a1))
-			a2 := &Account{Name: "bar"}
+			a2 := &Account{}
 			assert.NoError(t, txn.CreateAccount(a2))
 
 			// Add projects to first account.

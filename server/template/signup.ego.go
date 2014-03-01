@@ -1,156 +1,156 @@
 package template
 
-//line login.ego:3
+//line signup.ego:3
 import (
 	"fmt"
 	"io"
 )
 
-//line login.ego:1
-func (t *Template) Login(w io.Writer) error {
-//line login.ego:2
+//line signup.ego:1
+func (t *Template) Signup(w io.Writer) error {
+//line signup.ego:2
 	if _, err := fmt.Fprintf(w, "\n\n"); err != nil {
 		return err
 	}
-//line login.ego:9
+//line signup.ego:9
 	if _, err := fmt.Fprintf(w, "\n\n"); err != nil {
 		return err
 	}
-//line login.ego:10
+//line signup.ego:10
 	if _, err := fmt.Fprintf(w, "<!DOCTYPE html>\n"); err != nil {
 		return err
 	}
-//line login.ego:11
+//line signup.ego:11
 	if _, err := fmt.Fprintf(w, "<html lang=\"en\">\n  "); err != nil {
 		return err
 	}
-//line login.ego:12
+//line signup.ego:12
 	t.Head(w, "")
-//line login.ego:13
+//line signup.ego:13
 	if _, err := fmt.Fprintf(w, "\n\n  "); err != nil {
 		return err
 	}
-//line login.ego:14
-	if _, err := fmt.Fprintf(w, "<body id=\"login\">\n    "); err != nil {
+//line signup.ego:14
+	if _, err := fmt.Fprintf(w, "<body id=\"signup\">\n    "); err != nil {
 		return err
 	}
-//line login.ego:15
+//line signup.ego:15
 	if _, err := fmt.Fprintf(w, "<div class=\"container\">\n      "); err != nil {
 		return err
 	}
-//line login.ego:16
+//line signup.ego:16
 	t.Nav(w)
-//line login.ego:17
+//line signup.ego:17
 	if _, err := fmt.Fprintf(w, "\n      "); err != nil {
 		return err
 	}
-//line login.ego:17
+//line signup.ego:17
 	t.Flash(w)
-//line login.ego:18
+//line signup.ego:18
 	if _, err := fmt.Fprintf(w, "\n\n      "); err != nil {
 		return err
 	}
-//line login.ego:19
+//line signup.ego:19
 	if _, err := fmt.Fprintf(w, "<div class=\"panel panel-default\">\n        "); err != nil {
 		return err
 	}
-//line login.ego:20
+//line signup.ego:20
 	if _, err := fmt.Fprintf(w, "<div class=\"panel-heading\">\n          "); err != nil {
 		return err
 	}
-//line login.ego:21
-	if _, err := fmt.Fprintf(w, "<h3 class=\"panel-title\">Sign In"); err != nil {
+//line signup.ego:21
+	if _, err := fmt.Fprintf(w, "<h3 class=\"panel-title\">Sign Up"); err != nil {
 		return err
 	}
-//line login.ego:21
+//line signup.ego:21
 	if _, err := fmt.Fprintf(w, "</h3>\n        "); err != nil {
 		return err
 	}
-//line login.ego:22
+//line signup.ego:22
 	if _, err := fmt.Fprintf(w, "</div>\n        "); err != nil {
 		return err
 	}
-//line login.ego:23
+//line signup.ego:23
 	if _, err := fmt.Fprintf(w, "<div class=\"panel-body\">\n          "); err != nil {
 		return err
 	}
-//line login.ego:24
-	if _, err := fmt.Fprintf(w, "<form role=\"form\" action=\"/login\" method=\"POST\">\n            "); err != nil {
+//line signup.ego:24
+	if _, err := fmt.Fprintf(w, "<form role=\"form\" action=\"/signup\" method=\"POST\">\n            "); err != nil {
 		return err
 	}
-//line login.ego:25
+//line signup.ego:25
 	if _, err := fmt.Fprintf(w, "<div class=\"form-group\">\n              "); err != nil {
 		return err
 	}
-//line login.ego:26
+//line signup.ego:26
 	if _, err := fmt.Fprintf(w, "<label for=\"email\">E-mail address"); err != nil {
 		return err
 	}
-//line login.ego:26
+//line signup.ego:26
 	if _, err := fmt.Fprintf(w, "</label>\n              "); err != nil {
 		return err
 	}
-//line login.ego:27
-	if _, err := fmt.Fprintf(w, "<input type=\"text\" class=\"form-control\" id=\"email\" name=\"email\" placeholder=\"Enter e-mail address\">\n            "); err != nil {
+//line signup.ego:27
+	if _, err := fmt.Fprintf(w, "<input type=\"text\" class=\"form-control\" id=\"email\" name=\"email\" placeholder=\"Enter your e-mail address\">\n            "); err != nil {
 		return err
 	}
-//line login.ego:28
+//line signup.ego:28
 	if _, err := fmt.Fprintf(w, "</div>\n            "); err != nil {
 		return err
 	}
-//line login.ego:29
+//line signup.ego:29
 	if _, err := fmt.Fprintf(w, "<div class=\"form-group\">\n              "); err != nil {
 		return err
 	}
-//line login.ego:30
+//line signup.ego:30
 	if _, err := fmt.Fprintf(w, "<label for=\"password\">Password"); err != nil {
 		return err
 	}
-//line login.ego:30
+//line signup.ego:30
 	if _, err := fmt.Fprintf(w, "</label>\n              "); err != nil {
 		return err
 	}
-//line login.ego:31
-	if _, err := fmt.Fprintf(w, "<input type=\"password\" class=\"form-control\" id=\"password\" name=\"password\" placeholder=\"Password\">\n            "); err != nil {
+//line signup.ego:31
+	if _, err := fmt.Fprintf(w, "<input type=\"password\" class=\"form-control\" id=\"password\" name=\"password\" placeholder=\"Choose a password\">\n            "); err != nil {
 		return err
 	}
-//line login.ego:32
+//line signup.ego:32
 	if _, err := fmt.Fprintf(w, "</div>\n            "); err != nil {
 		return err
 	}
-//line login.ego:33
-	if _, err := fmt.Fprintf(w, "<button class=\"btn btn-lg btn-primary btn-block\" type=\"submit\">Sign in"); err != nil {
+//line signup.ego:33
+	if _, err := fmt.Fprintf(w, "<button class=\"btn btn-lg btn-success btn-block\" type=\"submit\">Sign up"); err != nil {
 		return err
 	}
-//line login.ego:33
+//line signup.ego:33
 	if _, err := fmt.Fprintf(w, "</button>\n          "); err != nil {
 		return err
 	}
-//line login.ego:34
+//line signup.ego:34
 	if _, err := fmt.Fprintf(w, "</div>\n        "); err != nil {
 		return err
 	}
-//line login.ego:35
+//line signup.ego:35
 	if _, err := fmt.Fprintf(w, "</div>\n      "); err != nil {
 		return err
 	}
-//line login.ego:36
+//line signup.ego:36
 	if _, err := fmt.Fprintf(w, "</div>\n\n    "); err != nil {
 		return err
 	}
-//line login.ego:38
+//line signup.ego:38
 	if _, err := fmt.Fprintf(w, "</div> "); err != nil {
 		return err
 	}
-//line login.ego:38
+//line signup.ego:38
 	if _, err := fmt.Fprintf(w, "<!-- /container -->\n  "); err != nil {
 		return err
 	}
-//line login.ego:39
+//line signup.ego:39
 	if _, err := fmt.Fprintf(w, "</body>\n"); err != nil {
 		return err
 	}
-//line login.ego:40
+//line signup.ego:40
 	if _, err := fmt.Fprintf(w, "</html>\n\n"); err != nil {
 		return err
 	}

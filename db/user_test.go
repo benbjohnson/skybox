@@ -13,9 +13,9 @@ func TestUserCreate(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create an account and user.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			u := &User{Username: "johndoe", Password: "mybirthday"}
+			u := &User{Email: "johndoe@gmail.com", Password: "mybirthday"}
 			assert.NoError(t, a.CreateUser(u))
 			assert.Equal(t, u.ID(), 1)
 
@@ -25,7 +25,7 @@ func TestUserCreate(t *testing.T) {
 				assert.Equal(t, u2.Transaction, txn)
 				assert.Equal(t, u2.ID(), 1)
 				assert.Equal(t, u2.AccountID, 1)
-				assert.Equal(t, u2.Username, "johndoe")
+				assert.Equal(t, u2.Email, "johndoe@gmail.com")
 			}
 			return nil
 		})
@@ -37,12 +37,12 @@ func TestUserCreateAfterDeletion(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create an account and delete it.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
 			assert.NoError(t, a.Delete())
 
 			// Attempt to create a user.
-			err := a.CreateUser(&User{Username: "johndoe", Password: "password"})
+			err := a.CreateUser(&User{Email: "johndoe@gmail.com", Password: "password"})
 			assert.Equal(t, err, ErrAccountNotFound)
 			return nil
 		})
@@ -50,14 +50,14 @@ func TestUserCreateAfterDeletion(t *testing.T) {
 }
 
 // Ensure that creating an invalid user returns an error.
-func TestUserCreateMissingUsername(t *testing.T) {
+func TestUserCreateMissingEmail(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create an account and user.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
 			err := a.CreateUser(&User{Password: "password"})
-			assert.Equal(t, err, ErrUserUsernameRequired)
+			assert.Equal(t, err, ErrUserEmailRequired)
 			return nil
 		})
 	})
@@ -67,9 +67,9 @@ func TestUserCreateMissingUsername(t *testing.T) {
 func TestUserCreateMissingPassword(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			err := a.CreateUser(&User{Username: "johndoe"})
+			err := a.CreateUser(&User{Email: "johndoe@gmail.com"})
 			assert.Equal(t, err, ErrUserPasswordRequired)
 			return nil
 		})
@@ -80,9 +80,9 @@ func TestUserCreateMissingPassword(t *testing.T) {
 func TestUserCreatePasswordTooShort(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			err := a.CreateUser(&User{Username: "johndoe", Password: "abc"})
+			err := a.CreateUser(&User{Email: "johndoe@gmail.com", Password: "abc"})
 			assert.Equal(t, err, ErrUserPasswordTooShort)
 			return nil
 		})
@@ -93,25 +93,25 @@ func TestUserCreatePasswordTooShort(t *testing.T) {
 func TestUserCreatePasswordTooLong(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			err := a.CreateUser(&User{Username: "johndoe", Password: strings.Repeat("*", 51)})
+			err := a.CreateUser(&User{Email: "johndoe@gmail.com", Password: strings.Repeat("*", 51)})
 			assert.Equal(t, err, ErrUserPasswordTooLong)
 			return nil
 		})
 	})
 }
 
-// Ensure that creating a user with an already taken username returns an error.
-func TestUserCreateUsernameTaken(t *testing.T) {
+// Ensure that creating a user with an already taken email returns an error.
+func TestUserCreateEmailTaken(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			err := a.CreateUser(&User{Username: "johndoe", Password: "password"})
+			err := a.CreateUser(&User{Email: "johndoe@gmail.com", Password: "password"})
 			assert.NoError(t, err)
-			err = a.CreateUser(&User{Username: "johndoe", Password: "foobar"})
-			assert.Equal(t, err, ErrUserUsernameTaken)
+			err = a.CreateUser(&User{Email: "johndoe@gmail.com", Password: "foobar"})
+			assert.Equal(t, err, ErrUserEmailTaken)
 			return nil
 		})
 	})
@@ -122,19 +122,19 @@ func TestUserUpdate(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create account and user.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			u := &User{Username: "bob", Password: "password"}
+			u := &User{Email: "bob@gmail.com", Password: "password"}
 			assert.NoError(t, a.CreateUser(u))
 
 			// Update the user.
-			u.Username = "jim"
+			u.Email = "jim@gmail.com"
 			u.Save()
 
 			// Retrieve the user.
 			u2, err := txn.User(1)
 			if assert.NoError(t, err) && assert.NotNil(t, u2) {
-				assert.Equal(t, u2.Username, "jim")
+				assert.Equal(t, u2.Email, "jim@gmail.com")
 			}
 			return nil
 		})
@@ -146,9 +146,9 @@ func TestUserDelete(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create account and user.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			u := &User{Username: "bob", Password: "password"}
+			u := &User{Email: "bob@gmail.com", Password: "password"}
 			assert.NoError(t, a.CreateUser(u))
 
 			// Delete the user.
@@ -167,9 +167,9 @@ func TestUserAuthenticate(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(txn *Transaction) error {
 			// Create account and user.
-			a := &Account{Name: "Foo"}
+			a := &Account{}
 			assert.NoError(t, txn.CreateAccount(a))
-			u := &User{Username: "bob", Password: "password"}
+			u := &User{Email: "bob@gmail.com", Password: "password"}
 			assert.NoError(t, a.CreateUser(u))
 
 			// Authenticate the user with the correct password.

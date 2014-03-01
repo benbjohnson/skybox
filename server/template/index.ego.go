@@ -31,7 +31,7 @@ func (t *Template) Index(w io.Writer) error {
 		return err
 	}
 //line index.ego:14
-	if _, err := fmt.Fprintf(w, "<body>\n    "); err != nil {
+	if _, err := fmt.Fprintf(w, "<body id=\"index\">\n    "); err != nil {
 		return err
 	}
 //line index.ego:15

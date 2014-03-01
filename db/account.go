@@ -8,16 +8,12 @@ var (
 	// ErrAccountNotFound is returned when an account with the given id does
 	// not exist.
 	ErrAccountNotFound = &Error{"account not found", nil}
-
-	// ErrAccountNameRequired is returned when an account has a blank name.
-	ErrAccountNameRequired = &Error{"account name required", nil}
 )
 
 // Account represents a collection of Users and Projects.
 type Account struct {
 	Transaction *Transaction
 	id          int
-	Name        string
 }
 
 // ID returns the account identifier.
@@ -27,9 +23,6 @@ func (a *Account) ID() int {
 
 // Validate validates all fields of the account.
 func (a *Account) Validate() error {
-	if len(a.Name) == 0 {
-		return ErrAccountNameRequired
-	}
 	return nil
 }
 
@@ -89,9 +82,9 @@ func (a *Account) CreateUser(u *User) error {
 		return err
 	}
 
-	// Verify that username is not taken.
-	if id := getUniqueIndex(a.Transaction, "user.username", []byte(u.Username)); id != 0 {
-		return ErrUserUsernameTaken
+	// Verify that email is not taken.
+	if id := getUniqueIndex(a.Transaction, "user.email", []byte(u.Email)); id != 0 {
+		return ErrUserEmailTaken
 	}
 
 	// Generate new id.
@@ -100,7 +93,7 @@ func (a *Account) CreateUser(u *User) error {
 
 	// Add user id to secondary index.
 	insertIntoForeignKeyIndex(a.Transaction, "account.users", itob(a.id), u.id)
-	insertIntoUniqueIndex(a.Transaction, "user.username", []byte(u.Username), u.id)
+	insertIntoUniqueIndex(a.Transaction, "user.email", []byte(u.Email), u.id)
 
 	// Save user.
 	return u.Save()
@@ -170,4 +163,4 @@ type Accounts []*Account
 
 func (s Accounts) Len() int           { return len(s) }
 func (s Accounts) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s Accounts) Less(i, j int) bool { return s[i].Name < s[j].Name }
+func (s Accounts) Less(i, j int) bool { return s[i].id < s[j].id }

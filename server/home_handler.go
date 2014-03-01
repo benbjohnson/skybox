@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/benbjohnson/skybox/db"
 	"github.com/benbjohnson/skybox/server/template"
 )
 
@@ -15,6 +16,8 @@ func (h *homeHandler) install() {
 	h.server.Handle("/login", http.HandlerFunc(h.login)).Methods("GET")
 	h.server.Handle("/login", h.transact(http.HandlerFunc(h.doLogin))).Methods("POST")
 	h.server.Handle("/logout", http.HandlerFunc(h.logout))
+	h.server.Handle("/signup", http.HandlerFunc(h.signup)).Methods("GET")
+	h.server.Handle("/signup", h.rwtransact(http.HandlerFunc(h.doSignup))).Methods("POST")
 }
 
 func (h *homeHandler) index(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +38,7 @@ func (h *homeHandler) doLogin(w http.ResponseWriter, r *http.Request) {
 	txn, session := h.transaction(r), h.session(r)
 
 	// Retrieve user.
-	user, err := txn.UserByUsername(r.FormValue("username"))
+	user, err := txn.UserByEmail(r.FormValue("email"))
 	if err != nil {
 		session.AddFlash(err.Error())
 		http.Redirect(w, r, "/login", http.StatusFound)
@@ -51,11 +54,50 @@ func (h *homeHandler) doLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Set session's User ID.
 	session.Values["UserID"] = user.ID()
+	session.Save(r, w)
 
 	// Redirect to home page.
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (h *homeHandler) logout(w http.ResponseWriter, r *http.Request) {
-	// TODO(benbjohnson): Remove User ID from session.
+	session := h.session(r)
+	delete(session.Values, "UserID")
+	session.Save(r, w)
+}
+
+func (h *homeHandler) signup(w http.ResponseWriter, r *http.Request) {
+	template.New(h.session(r), nil, nil).Signup(w)
+}
+
+func (h *homeHandler) doSignup(w http.ResponseWriter, r *http.Request) {
+	txn, session := h.transaction(r), h.session(r)
+
+	// Create a new account.
+	account := &db.Account{}
+	if err := txn.CreateAccount(account); err != nil {
+		txn.Rollback()
+		session.AddFlash(err.Error())
+		http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
+		return
+	}
+
+	// Create a new account.
+	user := &db.User{
+		Email:    r.FormValue("email"),
+		Password: r.FormValue("password"),
+	}
+	if err := account.CreateUser(user); err != nil {
+		txn.Rollback()
+		session.AddFlash(err.Error())
+		http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
+		return
+	}
+
+	// Update session.
+	session.Values["UserID"] = user.ID()
+	session.Save(r, w)
+
+	// Redirect to home page.
+	http.Redirect(w, r, "/", http.StatusFound)
 }
