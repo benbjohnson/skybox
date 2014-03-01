@@ -28,6 +28,6 @@ templates:
 	@ego server/template
 
 test: assets templates fmt
-	@go test -v -test.run=$(TEST) $(PKG)
+	@go test -a -v -test.run=$(TEST) $(PKG)
 
 .PHONY: assets bench cloc cover fmt run templates test

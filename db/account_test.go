@@ -25,6 +25,7 @@ func TestAccountUpdate(t *testing.T) {
 			if assert.NoError(t, err) && assert.NotNil(t, a2) {
 				assert.Equal(t, a2.Name, "Bar")
 			}
+			return nil
 		})
 	})
 }
@@ -58,48 +59,59 @@ func TestAccountDelete(t *testing.T) {
 func TestAccountUsers(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create two accounts.
-		err := db.Do(func(txn *Transaction) error {
+		db.Do(func(txn *Transaction) error {
 			a1 := &Account{Name: "foo"}
-			assert.NoError(t, db.CreateAccount(a1))
+			assert.NoError(t, txn.CreateAccount(a1))
 			a2 := &Account{Name: "bar"}
-			assert.NoError(t, db.CreateAccount(a2))
+			assert.NoError(t, txn.CreateAccount(a2))
 			return nil
 		})
 
 		// Add users to first account.
-		err = db.Do(func(txn *Transaction) error {
+		db.Do(func(txn *Transaction) error {
+			a1, _ := txn.Account(1)
 			assert.NoError(t, a1.CreateUser(&User{Username: "susyque", Password: "password"}))
 			assert.NoError(t, a1.CreateUser(&User{Username: "johndoe", Password: "password"}))
 			return nil
 		})
 
 		// Add users to second account.
-		err = db.Do(func(txn *Transaction) error {
+		db.Do(func(txn *Transaction) error {
+			a2, _ := txn.Account(2)
 			assert.NoError(t, a2.CreateUser(&User{Username: "billybob", Password: "password"}))
+			return nil
 		})
 
 		// Check first account users.
-		users, err := a1.Users()
-		if assert.NoError(t, err) && assert.Equal(t, len(users), 2) {
-			assert.Equal(t, users[0].DB(), db)
-			assert.Equal(t, users[0].ID(), 2)
-			assert.Equal(t, users[0].AccountID, 1)
-			assert.Equal(t, users[0].Username, "johndoe")
+		db.With(func(txn *Transaction) error {
+			a1, _ := txn.Account(1)
+			users, err := a1.Users()
+			if assert.NoError(t, err) && assert.Equal(t, len(users), 2) {
+				assert.Equal(t, users[0].Transaction, txn)
+				assert.Equal(t, users[0].ID(), 2)
+				assert.Equal(t, users[0].AccountID, 1)
+				assert.Equal(t, users[0].Username, "johndoe")
 
-			assert.Equal(t, users[1].DB(), db)
-			assert.Equal(t, users[1].ID(), 1)
-			assert.Equal(t, users[1].AccountID, 1)
-			assert.Equal(t, users[1].Username, "susyque")
-		}
+				assert.Equal(t, users[1].Transaction, txn)
+				assert.Equal(t, users[1].ID(), 1)
+				assert.Equal(t, users[1].AccountID, 1)
+				assert.Equal(t, users[1].Username, "susyque")
+			}
+			return nil
+		})
 
 		// Check second account users.
-		users, err = a2.Users()
-		if assert.NoError(t, err) && assert.Equal(t, len(users), 1) {
-			assert.Equal(t, users[0].DB(), db)
-			assert.Equal(t, users[0].ID(), 3)
-			assert.Equal(t, users[0].AccountID, 2)
-			assert.Equal(t, users[0].Username, "billybob")
-		}
+		db.With(func(txn *Transaction) error {
+			a2, _ := txn.Account(2)
+			users, err := a2.Users()
+			if assert.NoError(t, err) && assert.Equal(t, len(users), 1) {
+				assert.Equal(t, users[0].Transaction, txn)
+				assert.Equal(t, users[0].ID(), 3)
+				assert.Equal(t, users[0].AccountID, 2)
+				assert.Equal(t, users[0].Username, "billybob")
+			}
+			return nil
+		})
 	})
 }
 
@@ -107,39 +119,50 @@ func TestAccountUsers(t *testing.T) {
 func TestAccountProjects(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create two accounts.
-		a1 := &Account{Name: "foo"}
-		assert.NoError(t, db.CreateAccount(a1))
-		a2 := &Account{Name: "bar"}
-		assert.NoError(t, db.CreateAccount(a2))
+		db.Do(func(txn *Transaction) error {
+			a1 := &Account{Name: "foo"}
+			assert.NoError(t, txn.CreateAccount(a1))
+			a2 := &Account{Name: "bar"}
+			assert.NoError(t, txn.CreateAccount(a2))
 
-		// Add projects to first account.
-		assert.NoError(t, a1.CreateProject(&Project{Name: "Project Y"}))
-		assert.NoError(t, a1.CreateProject(&Project{Name: "Project X"}))
+			// Add projects to first account.
+			assert.NoError(t, a1.CreateProject(&Project{Name: "Project Y"}))
+			assert.NoError(t, a1.CreateProject(&Project{Name: "Project X"}))
 
-		// Add projects to second account.
-		assert.NoError(t, a2.CreateProject(&Project{Name: "Project A"}))
+			// Add projects to second account.
+			assert.NoError(t, a2.CreateProject(&Project{Name: "Project A"}))
+			return nil
+		})
 
 		// Check first account projects.
-		projects, err := a1.Projects()
-		if assert.NoError(t, err) && assert.Equal(t, len(projects), 2) {
-			assert.Equal(t, projects[0].DB(), db)
-			assert.Equal(t, projects[0].ID(), 2)
-			assert.Equal(t, projects[0].AccountID, 1)
-			assert.Equal(t, projects[0].Name, "Project X")
+		db.With(func(txn *Transaction) error {
+			a1, _ := txn.Account(1)
+			projects, err := a1.Projects()
+			if assert.NoError(t, err) && assert.Equal(t, len(projects), 2) {
+				assert.Equal(t, projects[0].Transaction, txn)
+				assert.Equal(t, projects[0].ID(), 2)
+				assert.Equal(t, projects[0].AccountID, 1)
+				assert.Equal(t, projects[0].Name, "Project X")
 
-			assert.Equal(t, projects[1].DB(), db)
-			assert.Equal(t, projects[1].ID(), 1)
-			assert.Equal(t, projects[1].AccountID, 1)
-			assert.Equal(t, projects[1].Name, "Project Y")
-		}
+				assert.Equal(t, projects[1].Transaction, txn)
+				assert.Equal(t, projects[1].ID(), 1)
+				assert.Equal(t, projects[1].AccountID, 1)
+				assert.Equal(t, projects[1].Name, "Project Y")
+			}
+			return nil
+		})
 
 		// Check second account projects.
-		projects, err = a2.Projects()
-		if assert.NoError(t, err) && assert.Equal(t, len(projects), 1) {
-			assert.Equal(t, projects[0].DB(), db)
-			assert.Equal(t, projects[0].ID(), 3)
-			assert.Equal(t, projects[0].AccountID, 2)
-			assert.Equal(t, projects[0].Name, "Project A")
-		}
+		db.With(func(txn *Transaction) error {
+			a2, _ := txn.Account(2)
+			projects, err := a2.Projects()
+			if assert.NoError(t, err) && assert.Equal(t, len(projects), 1) {
+				assert.Equal(t, projects[0].Transaction, txn)
+				assert.Equal(t, projects[0].ID(), 3)
+				assert.Equal(t, projects[0].AccountID, 2)
+				assert.Equal(t, projects[0].Name, "Project A")
+			}
+			return nil
+		})
 	})
 }
