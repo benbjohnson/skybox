@@ -3,7 +3,7 @@ TEST=.
 BENCH=.
 COVERPROFILE=/tmp/c.out
 
-assets:
+assets: less
 	cd server && go-bindata -pkg=server -prefix=assets/ assets
 
 bench:
@@ -21,6 +21,9 @@ cover: fmt
 fmt:
 	@go fmt $(PKG)
 
+less:
+	@lessc server/assets/application.less > server/assets/application.css
+
 run: assets templates
 	@go run ./cmd/skybox/main.go
 
@@ -30,4 +33,4 @@ templates:
 test: assets templates fmt
 	@go test -a -v -test.run=$(TEST) $(PKG)
 
-.PHONY: assets bench cloc cover fmt run templates test
+.PHONY: assets bench cloc cover fmt less run templates test

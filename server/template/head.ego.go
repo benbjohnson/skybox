@@ -58,30 +58,26 @@ func (t *Template) Head(w io.Writer, title string) error {
 		return err
 	}
 //line head.ego:23
-	if _, err := fmt.Fprintf(w, "<link href=\"/assets/bootstrap-theme.min.css\" rel=\"stylesheet\">\n  "); err != nil {
-		return err
-	}
-//line head.ego:24
 	if _, err := fmt.Fprintf(w, "<link href=\"/assets/application.css\" rel=\"stylesheet\">\n  "); err != nil {
 		return err
 	}
-//line head.ego:25
+//line head.ego:24
 	if _, err := fmt.Fprintf(w, "<script src=\"/assets/jquery-2.1.0.min.js\">"); err != nil {
 		return err
 	}
-//line head.ego:25
+//line head.ego:24
 	if _, err := fmt.Fprintf(w, "</script>\n  "); err != nil {
 		return err
 	}
-//line head.ego:26
+//line head.ego:25
 	if _, err := fmt.Fprintf(w, "<script src=\"/assets/bootstrap.min.js\">"); err != nil {
 		return err
 	}
-//line head.ego:26
+//line head.ego:25
 	if _, err := fmt.Fprintf(w, "</script>\n"); err != nil {
 		return err
 	}
-//line head.ego:27
+//line head.ego:26
 	if _, err := fmt.Fprintf(w, "</head>\n"); err != nil {
 		return err
 	}

@@ -32,8 +32,8 @@ func (s *Server) ListenAndServe() error {
 	s.Router = mux.NewRouter()
 	s.Handler = s.Router
 	s.HandleFunc("/assets/{filename}", s.assetHandler).Methods("GET")
-	(&homeHandler{handler{s}}).install()
-	(&projectsHandler{handler{s}}).install()
+	(&homeHandler{handler{server: s}}).install()
+	(&projectsHandler{handler{server: s}}).install()
 
 	// Start listening on the socket.
 	listener, err := net.Listen("tcp", s.Addr)
