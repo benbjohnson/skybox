@@ -77,3 +77,12 @@ func (t *Transaction) Project(id int) (*Project, error) {
 	}
 	return p, nil
 }
+
+// Funnel retrieves a Funnel from the database with the given identifier.
+func (t *Transaction) Funnel(id int) (*Funnel, error) {
+	f := &Funnel{Transaction: t, id: id}
+	if err := f.Load(); err != nil {
+		return nil, err
+	}
+	return f, nil
+}

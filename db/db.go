@@ -42,6 +42,12 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 		err = txn.CreateBucketIfNotExists("projects")
 		assert(err == nil, "projects bucket error: %s", err)
 
+		err = txn.CreateBucketIfNotExists("project.funnels")
+		assert(err == nil, "project.funnels bucket error: %s", err)
+
+		err = txn.CreateBucketIfNotExists("funnels")
+		assert(err == nil, "funnels bucket error: %s", err)
+
 		return nil
 	})
 

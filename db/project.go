@@ -1,6 +1,8 @@
 package db
 
 import (
+	"sort"
+
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -79,6 +81,62 @@ func (p *Project) Delete() error {
 	removeFromForeignKeyIndex(p.Transaction, "account.projects", itob(p.AccountID), p.id)
 
 	return nil
+}
+
+// Funnel retrieves a funnel with a given ID.
+// Only funnels associated with this project will be returned.
+func (p *Project) Funnel(id int) (*Funnel, error) {
+	assert(p.id > 0, "find funnel on unsaved project: %d", p.id)
+	f, err := p.Transaction.Funnel(id)
+	if err != nil {
+		return nil, err
+	} else if f.ProjectID != p.ID() {
+		return nil, ErrFunnelNotFound
+	}
+	return f, nil
+}
+
+// CreateFunnel creates a new Funnel for this project.
+func (p *Project) CreateFunnel(f *Funnel) error {
+	assert(f.id == 0, "create funnel with a non-zero id: %d", f.id)
+	assert(p.id > 0, "create funnel on unsaved project: %d", p.id)
+	if err := f.Validate(); err != nil {
+		return err
+	}
+
+	// Verify project exists.
+	if _, err := p.get(); err != nil {
+		return err
+	}
+
+	f.Transaction = p.Transaction
+	f.ProjectID = p.id
+
+	// Generate new id.
+	f.id, _ = p.Transaction.Bucket("funnels").NextSequence()
+	assert(p.id > 0, "funnel sequence error")
+
+	// Add funnel id to secondary index.
+	insertIntoForeignKeyIndex(p.Transaction, "project.funnels", itob(p.id), f.id)
+
+	// Save funnel.
+	return f.Save()
+}
+
+// Funnels retrieves a list of all funnels for the project.
+func (p *Project) Funnels() (Funnels, error) {
+	funnels := make(Funnels, 0)
+	index := getForeignKeyIndex(p.Transaction, "project.funnels", itob(p.id))
+
+	for _, id := range index {
+		f := &Funnel{Transaction: p.Transaction, id: id}
+		err := f.Load()
+		assert(err == nil, "funnel (%d) not found from project.funnels index (%d)", f.id, p.id)
+		assert(f.ProjectID == p.id, "funnel/project mismatch: %d (%d) not in %d", f.id, f.ProjectID, p.id)
+		funnels = append(funnels, f)
+	}
+	sort.Sort(funnels)
+	return funnels, nil
 }
 
 type Projects []*Project
