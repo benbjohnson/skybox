@@ -78,6 +78,18 @@ func (t *Transaction) Project(id int) (*Project, error) {
 	return p, nil
 }
 
+// ProjectByAPIKey retrieves a Project from the database with the given API key.
+func (t *Transaction) ProjectByAPIKey(apiKey string) (*Project, error) {
+	p := &Project{Transaction: t}
+	if p.id = getUniqueIndex(t, "projects.APIKey", []byte(apiKey)); p.id == 0 {
+		return nil, ErrProjectNotFound
+	}
+	if err := p.Load(); err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
 // Funnel retrieves a Funnel from the database with the given identifier.
 func (t *Transaction) Funnel(id int) (*Funnel, error) {
 	f := &Funnel{Transaction: t, id: id}

@@ -86,7 +86,6 @@ func (h *handler) notFound(w http.ResponseWriter, r *http.Request) {
 	t.NotFound(w)
 }
 
-
 // transactor executes a handler in the context of a read-only transaction.
 type transactor struct {
 	parent  *handler

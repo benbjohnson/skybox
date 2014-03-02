@@ -61,11 +61,9 @@ func (p *Project) Save() error {
 
 	// Autogenerate an API key if one does not exist.
 	if len(p.APIKey) == 0 {
-		apiKey, err := uuid.NewV4()
-		if err != nil {
+		if err := p.GenerateAPIKey(); err != nil {
 			return err
 		}
-		p.APIKey = apiKey.String()
 	}
 
 	return p.Transaction.Bucket("projects").Put(itob(p.id), marshal(p))
@@ -79,6 +77,26 @@ func (p *Project) Delete() error {
 
 	// Remove project id from indices.
 	removeFromForeignKeyIndex(p.Transaction, "account.projects", itob(p.AccountID), p.id)
+
+	return nil
+}
+
+// GenerateAPIKey creates a new API key for a project.
+func (p *Project) GenerateAPIKey() error {
+	// Remove old API key from index.
+	if p.APIKey != "" {
+		removeFromUniqueIndex(p.Transaction, "projects.APIKey", []byte(p.APIKey))
+	}
+
+	// Generate new API key.	
+	apiKey, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+	p.APIKey = apiKey.String()
+
+	// Update index.
+	insertIntoUniqueIndex(p.Transaction, "projects.APIKey", []byte{p.APIKey}, p.ID())
 
 	return nil
 }
