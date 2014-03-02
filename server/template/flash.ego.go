@@ -37,7 +37,7 @@ func (t *Template) Flash(w io.Writer) error {
 				return err
 			}
 //line flash.ego:8
-			if _, err := fmt.Fprintf(w, fmt.Sprintf("%v", flash)); err != nil {
+			if _, err := fmt.Fprintf(w, "%v", flash); err != nil {
 				return err
 			}
 //line flash.ego:8

@@ -1,5 +1,9 @@
 package db
 
+import (
+	"github.com/nu7hatch/gouuid"
+)
+
 var (
 	// ErrProjectNotFound is returned when a project does not exist.
 	ErrProjectNotFound = &Error{"project not found", nil}
@@ -15,6 +19,7 @@ type Project struct {
 	id          int
 	AccountID   int    `json:"accountID"`
 	Name        string `json:"name"`
+	APIKey      string `json:"apiKey"`
 }
 
 // ID returns the project identifier.
@@ -51,6 +56,16 @@ func (p *Project) Load() error {
 // Save commits the Project to the database.
 func (p *Project) Save() error {
 	assert(p.id > 0, "uninitialized project cannot be saved")
+
+	// Autogenerate an API key if one does not exist.
+	if len(p.APIKey) == 0 {
+		apiKey, err := uuid.NewV4()
+		if err != nil {
+			return err
+		}
+		p.APIKey = apiKey.String()
+	}
+
 	return p.Transaction.Bucket("projects").Put(itob(p.id), marshal(p))
 }
 

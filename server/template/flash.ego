@@ -5,6 +5,6 @@
 
 <% if t.Session != nil { %>
   <% for _, flash := range t.Session.Flashes() { %>
-    <p class="bg-danger"><%= fmt.Sprintf("%v", flash) %></p>
+    <p class="bg-danger"><%= flash %></p>
   <% } %>
 <% } %>

@@ -116,6 +116,19 @@ func (a *Account) Users() (Users, error) {
 	return users, nil
 }
 
+// Project retrieves a project with a given ID.
+// Only projects associated with this account will be returned.
+func (a *Account) Project(id int) (*Project, error) {
+	assert(a.id > 0, "find project on unsaved account: %d", a.id)
+	p, err := a.Transaction.Project(id)
+	if err != nil {
+		return nil, err
+	} else if p.AccountID != a.ID() {
+		return nil, ErrProjectNotFound
+	}
+	return p, nil
+}
+
 // CreateProject creates a new Project for this account.
 func (a *Account) CreateProject(p *Project) error {
 	assert(p.id == 0, "create project with a non-zero id: %d", p.id)

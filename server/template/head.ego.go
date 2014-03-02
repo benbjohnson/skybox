@@ -46,7 +46,7 @@ func (t *Template) Head(w io.Writer, title string) error {
 		return err
 	}
 //line head.ego:21
-	if _, err := fmt.Fprintf(w, title); err != nil {
+	if _, err := fmt.Fprintf(w, "%v", title); err != nil {
 		return err
 	}
 //line head.ego:21

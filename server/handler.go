@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/benbjohnson/skybox/db"
+	"github.com/benbjohnson/skybox/server/template"
 	"github.com/gorilla/sessions"
 )
 
@@ -77,6 +78,14 @@ func (h *handler) auth(r *http.Request) (*db.User, *db.Account) {
 	}
 	return nil, nil
 }
+
+// notFound returns a 404 not found page.
+func (h *handler) notFound(w http.ResponseWriter, r *http.Request) {
+	user, account := h.auth(r)
+	t := template.New(h.session(r), user, account)
+	t.NotFound(w)
+}
+
 
 // transactor executes a handler in the context of a read-only transaction.
 type transactor struct {

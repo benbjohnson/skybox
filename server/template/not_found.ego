@@ -1,0 +1,30 @@
+<%! func (t *Template) NotFound(w io.Writer) error %>
+
+<%%
+import (
+	"fmt"
+	"io"
+)
+%%>
+
+<!DOCTYPE html>
+<html lang="en">
+  <% t.Head(w, "") %>
+
+  <body id="index">
+    <div class="container">
+      <% t.Nav(w) %>
+
+      <div class="page-header">
+        <h3>Not Found</h3>
+      </div>
+
+      <p>The page you requested could not be found.</p>
+
+      <p>
+        <button class="btn btn-default" onclick="window.history.back()">Back</button>
+      </p>
+    </div> <!-- /container -->
+  </body>
+</html>
+

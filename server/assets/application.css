@@ -10,6 +10,12 @@ body {
   border-radius: 0;
   margin-bottom: 20px;
 }
+.navbar .navbar-brand {
+  padding-left: 0px;
+}
+.navbar .navbar-nav.navbar-right:last-child {
+  margin-right: -30px;
+}
 /***************************************
  * login & signup
  ***************************************/
