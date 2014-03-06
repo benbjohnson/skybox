@@ -1,16 +1,19 @@
 package db
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/securecookie"
+	"github.com/skydb/gosky"
 )
 
 // DB represents a Bolt-backed data store.
 // The DB stores all non-event data.
 type DB struct {
 	bolt.DB
+	SkyClient sky.Client
 }
 
 // Open initializes and opens the database.
@@ -65,14 +68,14 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 // Do executes a function within the context of a writable transaction.
 func (db *DB) Do(fn func(*Transaction) error) error {
 	return db.DB.Do(func(t *bolt.RWTransaction) error {
-		return fn(&Transaction{&t.Transaction, t})
+		return fn(&Transaction{&t.Transaction, t, db})
 	})
 }
 
 // With executes a function within the context of a read-only transaction.
 func (db *DB) With(fn func(*Transaction) error) error {
 	return db.DB.With(func(t *bolt.Transaction) error {
-		return fn(&Transaction{t, nil})
+		return fn(&Transaction{t, nil, db})
 	})
 }
 
@@ -94,4 +97,19 @@ func (db *DB) Secret() ([]byte, error) {
 		return nil, err
 	}
 	return secret, nil
+}
+
+// assert will panic with a given formatted message if the given condition is false.
+func assert(condition bool, msg string, v ...interface{}) {
+	if !condition {
+		panic(fmt.Sprintf("assert failed: "+msg, v...))
+	}
+}
+
+func warn(v ...interface{}) {
+	fmt.Fprintln(os.Stderr, v...)
+}
+
+func warnf(msg string, v ...interface{}) {
+	fmt.Fprintf(os.Stderr, msg+"\n", v...)
 }

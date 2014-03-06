@@ -153,7 +153,16 @@ func (a *Account) CreateProject(p *Project) error {
 	insertIntoForeignKeyIndex(a.Transaction, "account.projects", itob(a.id), p.id)
 
 	// Save project.
-	return p.Save()
+	if err := p.Save(); err != nil {
+		return err
+	}
+
+	// Create Sky table.
+	if err := p.Migrate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Projects retrieves a list of all projects for the account.

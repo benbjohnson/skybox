@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"os/user"
@@ -41,6 +42,9 @@ func main() {
 	if err := os.MkdirAll(*path, 0700); err != nil {
 		log.Fatal(err)
 	}
+
+	// Seed the PRNG for API key generation.
+	rand.Seed(time.Unix64())
 
 	// Initialize db.
 	var db db.DB

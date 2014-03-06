@@ -126,6 +126,15 @@ func TestAccountProjects(t *testing.T) {
 				assert.Equal(t, projects[1].AccountID, 1)
 				assert.Equal(t, projects[1].Name, "Project Y")
 			}
+
+			// Make sure we can only get a1 projects.
+			p, err := a1.Project(1)
+			assert.NoError(t, err)
+			assert.NotNil(t, p)
+			p, err = a1.Project(3)
+			assert.Equal(t, err, ErrProjectNotFound)
+			assert.Nil(t, p)
+
 			return nil
 		})
 

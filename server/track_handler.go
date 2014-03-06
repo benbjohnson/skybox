@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/benbjohnson/skybox/db"
 )
@@ -10,11 +11,11 @@ type trackHandler struct {
 	handler
 }
 
-func (h *homeHandler) install() {
+func (h *trackHandler) install() {
 	h.server.Handle("/track.png", h.transact(http.HandlerFunc(h.track))).Methods("GET")
 }
 
-func (h *homeHandler) track(w http.ResponseWriter, r *http.Request) {
+func (h *trackHandler) track(w http.ResponseWriter, r *http.Request) {
 	txn := h.transaction(r)
 
 	// Find project by API key.
@@ -24,11 +25,30 @@ func (h *homeHandler) track(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Extract event from URL parameters.
-	// e := &Event{UserID, DeviceID, Channel, Resource, Action, Data:{Domain, Path}}
+	// Extract event from URL parameters.
+	e := &db.Event{
+		UserID:    r.FormValue("user.id"),
+		DeviceID:  r.FormValue("device.id"),
+		Timestamp: time.Now().UTC(),
+		Channel:   r.FormValue("channel"),
+		Resource:  r.FormValue("resource"),
+		Action:    r.FormValue("action"),
+		Data:      make(map[string]interface{}),
+	}
+	if domain := r.FormValue("domain"); len(domain) > 0 {
+		e.Data["domain"] = domain
+	}
+	if path := r.FormValue("path"); len(path) > 0 {
+		e.Data["path"] = path
+	}
 
-	// TODO: Send event to Sky.
-	// p.Track(e)
+	// Send event to Sky.
+	if err := p.Track(e); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	// TODO: Write track.png to writer.
+	// Write png to response.
+	b, _ := Asset("pixel.png")
+	w.Write(b)
 }

@@ -26,6 +26,11 @@ func TestUserCreate(t *testing.T) {
 				assert.Equal(t, u2.ID(), 1)
 				assert.Equal(t, u2.AccountID, 1)
 				assert.Equal(t, u2.Email, "johndoe@gmail.com")
+
+				// Retrieve the account again.
+				a2, err := u2.Account()
+				assert.NoError(t, err)
+				assert.Equal(t, a2.ID(), a.ID())
 			}
 			return nil
 		})

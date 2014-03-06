@@ -9,6 +9,7 @@ import (
 type Transaction struct {
 	*bolt.Transaction
 	*bolt.RWTransaction
+	db *DB
 }
 
 // Account retrieves an Account from the database with the given identifier.

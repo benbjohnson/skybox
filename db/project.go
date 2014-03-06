@@ -1,9 +1,11 @@
 package db
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/nu7hatch/gouuid"
+	"github.com/skydb/gosky"
 )
 
 var (
@@ -13,6 +15,15 @@ var (
 	// ErrProjectNameRequired is returned when a project has a blank name.
 	ErrProjectNameRequired = &Error{"project name required", nil}
 )
+
+// schema defines the required properties on the project's sky table.
+var schema = []*sky.Property{
+	{Name: "channel", Transient: true, DataType: sky.Factor},
+	{Name: "resource", Transient: true, DataType: sky.Factor},
+	{Name: "action", Transient: true, DataType: sky.Factor},
+	{Name: "domain", Transient: true, DataType: sky.Factor},
+	{Name: "path", Transient: true, DataType: sky.Factor},
+}
 
 // Project represents a collection of Persons and their events.
 // A Project belongs to an Account.
@@ -27,6 +38,20 @@ type Project struct {
 // ID returns the project identifier.
 func (p *Project) ID() int {
 	return p.id
+}
+
+// SkyTableName returns the name of the table used by Sky.
+func (p *Project) SkyTableName() string {
+	assert(p.id > 0, "uninitialized project does not have a sky table")
+	return fmt.Sprintf("skybox-%d", p.id)
+}
+
+// SkyTable returns a reference to the table used by Sky.
+func (p *Project) SkyTable() *sky.Table {
+	return &sky.Table{
+		Client: &p.Transaction.db.SkyClient,
+		Name:   p.SkyTableName(),
+	}
 }
 
 // Validate validates all fields of the user.
@@ -88,7 +113,7 @@ func (p *Project) GenerateAPIKey() error {
 		removeFromUniqueIndex(p.Transaction, "projects.APIKey", []byte(p.APIKey))
 	}
 
-	// Generate new API key.	
+	// Generate new API key.
 	apiKey, err := uuid.NewV4()
 	if err != nil {
 		return err
@@ -96,7 +121,7 @@ func (p *Project) GenerateAPIKey() error {
 	p.APIKey = apiKey.String()
 
 	// Update index.
-	insertIntoUniqueIndex(p.Transaction, "projects.APIKey", []byte{p.APIKey}, p.ID())
+	insertIntoUniqueIndex(p.Transaction, "projects.APIKey", []byte(p.APIKey), p.ID())
 
 	return nil
 }
@@ -155,6 +180,78 @@ func (p *Project) Funnels() (Funnels, error) {
 	}
 	sort.Sort(funnels)
 	return funnels, nil
+}
+
+// Track sends a single event to Sky.
+func (p *Project) Track(e *Event) error {
+	t := p.SkyTable()
+
+	// Serialize event and insert event into Sky.
+	id := e.ID()
+	skyEvent := e.Serialize()
+	if err := t.InsertEvent(id, skyEvent); err != nil {
+		return err
+	}
+
+	// TODO(benbjohnson): Merge timelines if necessary.
+	// t.Merge(id, t.AnonymousID())
+
+	return nil
+}
+
+// Events returns a list of events for a given ID.
+func (p *Project) Events(id string) ([]*Event, error) {
+	t := p.SkyTable()
+	skyEvents, err := t.Events(id)
+	if err != nil {
+		return nil, err
+	}
+
+	events := make([]*Event, 0, len(skyEvents))
+	for _, skyEvent := range skyEvents {
+		event := &Event{}
+		event.Deserialize(id, skyEvent)
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+// Migrate creates a Sky table and updates the schema, if necessary.
+func (p *Project) Migrate() error {
+	name := p.SkyTableName()
+	if err := p.createSkyTableIfNotExists(); err != nil {
+		return fmt.Errorf("migrate table error: %s: %s", name, err)
+	}
+	for _, property := range schema {
+		if err := p.createSkyPropertyIfNotExists(property); err != nil {
+			return fmt.Errorf("migrate property error: %s: %s: %s", name, property.Name, err)
+		}
+	}
+	return nil
+}
+
+// Reset drops the sky table and recreates it.
+func (p *Project) Reset() error {
+	c := &p.Transaction.db.SkyClient
+	c.DeleteTable(p.SkyTableName())
+	return p.Migrate()
+}
+
+func (p *Project) createSkyTableIfNotExists() error {
+	c := &p.Transaction.db.SkyClient
+	if t, err := c.Table(p.SkyTableName()); t != nil && err == nil {
+		return err
+	}
+	return c.CreateTable(p.SkyTable())
+}
+
+func (p *Project) createSkyPropertyIfNotExists(property *sky.Property) error {
+	t := p.SkyTable()
+	if tmp, err := t.Property(property.Name); tmp != nil && err == nil {
+		return err
+	}
+	return t.CreateProperty(property)
 }
 
 type Projects []*Project
