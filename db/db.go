@@ -23,35 +23,35 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 	}
 
 	// Create buckets.
-	err := db.Do(func(txn *Transaction) error {
-		err := txn.CreateBucketIfNotExists("system")
+	err := db.Do(func(tx *Tx) error {
+		err := tx.CreateBucketIfNotExists("system")
 		assert(err == nil, "system bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("accounts")
+		err = tx.CreateBucketIfNotExists("accounts")
 		assert(err == nil, "accounts bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("account.users")
+		err = tx.CreateBucketIfNotExists("account.users")
 		assert(err == nil, "account.users bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("account.projects")
+		err = tx.CreateBucketIfNotExists("account.projects")
 		assert(err == nil, "account.projects bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("users")
+		err = tx.CreateBucketIfNotExists("users")
 		assert(err == nil, "users bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("user.email")
+		err = tx.CreateBucketIfNotExists("user.email")
 		assert(err == nil, "user.email bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("projects")
+		err = tx.CreateBucketIfNotExists("projects")
 		assert(err == nil, "projects bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("projects.APIKey")
+		err = tx.CreateBucketIfNotExists("projects.APIKey")
 		assert(err == nil, "projects.APIKey bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("project.funnels")
+		err = tx.CreateBucketIfNotExists("project.funnels")
 		assert(err == nil, "project.funnels bucket error: %s", err)
 
-		err = txn.CreateBucketIfNotExists("funnels")
+		err = tx.CreateBucketIfNotExists("funnels")
 		assert(err == nil, "funnels bucket error: %s", err)
 
 		return nil
@@ -66,24 +66,24 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 }
 
 // Do executes a function within the context of a writable transaction.
-func (db *DB) Do(fn func(*Transaction) error) error {
-	return db.DB.Do(func(t *bolt.RWTransaction) error {
-		return fn(&Transaction{&t.Transaction, t, db})
+func (db *DB) Do(fn func(*Tx) error) error {
+	return db.DB.Do(func(tx *bolt.Tx) error {
+		return fn(&Tx{tx, db})
 	})
 }
 
 // With executes a function within the context of a read-only transaction.
-func (db *DB) With(fn func(*Transaction) error) error {
-	return db.DB.With(func(t *bolt.Transaction) error {
-		return fn(&Transaction{t, nil, db})
+func (db *DB) With(fn func(*Tx) error) error {
+	return db.DB.With(func(tx *bolt.Tx) error {
+		return fn(&Tx{tx, db})
 	})
 }
 
 // Secret retrieves the secret key used for cookie storage.
 func (db *DB) Secret() ([]byte, error) {
 	var secret []byte
-	err := db.Do(func(t *Transaction) error {
-		b := t.Bucket("system")
+	err := db.Do(func(tx *Tx) error {
+		b := tx.Bucket("system")
 		secret = b.Get([]byte("secret"))
 
 		if secret == nil {

@@ -14,11 +14,11 @@ var (
 // Funnel represents a multi-step query.
 // A Funnel belongs to a Project.
 type Funnel struct {
-	Transaction *Transaction
-	id          int
-	ProjectID   int           `json:"projectID"`
-	Name        string        `json:"name"`
-	Steps       []*FunnelStep `json:"steps"`
+	Tx        *Tx
+	id        int
+	ProjectID int           `json:"projectID"`
+	Name      string        `json:"name"`
+	Steps     []*FunnelStep `json:"steps"`
 }
 
 // FunnelStep represents a single step in a funnel.
@@ -42,7 +42,7 @@ func (f *Funnel) Validate() error {
 }
 
 func (f *Funnel) get() ([]byte, error) {
-	value := f.Transaction.Bucket("funnels").Get(itob(f.id))
+	value := f.Tx.Bucket("funnels").Get(itob(f.id))
 	if value == nil {
 		return nil, ErrFunnelNotFound
 	}
@@ -62,17 +62,17 @@ func (f *Funnel) Load() error {
 // Save commits the Funnel to the database.
 func (f *Funnel) Save() error {
 	assert(f.id > 0, "uninitialized funnel cannot be saved")
-	return f.Transaction.Bucket("funnels").Put(itob(f.id), marshal(f))
+	return f.Tx.Bucket("funnels").Put(itob(f.id), marshal(f))
 }
 
 // Delete removes the Funnel from the database.
 func (f *Funnel) Delete() error {
 	// Remove project entry.
-	err := f.Transaction.Bucket("funnels").Delete(itob(f.id))
+	err := f.Tx.Bucket("funnels").Delete(itob(f.id))
 	assert(err == nil, "funnel delete error: %s", err)
 
 	// Remove funnel id from indices.
-	removeFromForeignKeyIndex(f.Transaction, "project.funnels", itob(f.ProjectID), f.id)
+	removeFromForeignKeyIndex(f.Tx, "project.funnels", itob(f.ProjectID), f.id)
 
 	return nil
 }

@@ -11,18 +11,18 @@ import (
 // Ensure that an account can create a project.
 func TestProjectCreate(t *testing.T) {
 	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			// Create an account and project.
 			a := &Account{}
-			assert.NoError(t, txn.CreateAccount(a))
+			assert.NoError(t, tx.CreateAccount(a))
 			p := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(p))
 			assert.Equal(t, p.ID(), 1)
 
 			// Retrieve the project.
-			p2, err := txn.Project(1)
+			p2, err := tx.Project(1)
 			if assert.NoError(t, err) && assert.NotNil(t, p2) {
-				assert.Equal(t, p2.Transaction, txn)
+				assert.Equal(t, p2.Tx, tx)
 				assert.Equal(t, p2.ID(), 1)
 				assert.Equal(t, p2.AccountID, 1)
 				assert.Equal(t, p2.Name, "Project X")
@@ -35,10 +35,10 @@ func TestProjectCreate(t *testing.T) {
 // Ensure that an account cannot create a project after it's deleted.
 func TestProjectCreateAfterDeletion(t *testing.T) {
 	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			// Create an account and delete it.
 			a := &Account{}
-			assert.NoError(t, txn.CreateAccount(a))
+			assert.NoError(t, tx.CreateAccount(a))
 			assert.NoError(t, a.Delete())
 
 			// Attempt to create a project.
@@ -52,9 +52,9 @@ func TestProjectCreateAfterDeletion(t *testing.T) {
 // Ensure that creating an invalid project returns an error.
 func TestProjectCreateMissingName(t *testing.T) {
 	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			a := &Account{}
-			assert.NoError(t, txn.CreateAccount(a))
+			assert.NoError(t, tx.CreateAccount(a))
 			assert.Equal(t, a.CreateProject(&Project{}), ErrProjectNameRequired)
 			return nil
 		})
@@ -64,10 +64,10 @@ func TestProjectCreateMissingName(t *testing.T) {
 // Ensure that a project can update itself.
 func TestProjectUpdate(t *testing.T) {
 	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			// Create account and project.
 			a := &Account{}
-			assert.NoError(t, txn.CreateAccount(a))
+			assert.NoError(t, tx.CreateAccount(a))
 			p := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(p))
 
@@ -76,7 +76,7 @@ func TestProjectUpdate(t *testing.T) {
 			p.Save()
 
 			// Retrieve the project.
-			p2, err := txn.Project(1)
+			p2, err := tx.Project(1)
 			if assert.NoError(t, err) && assert.NotNil(t, p2) {
 				assert.Equal(t, p2.Name, "Project Y")
 			}
@@ -88,10 +88,10 @@ func TestProjectUpdate(t *testing.T) {
 // Ensure that a user can be deleted.
 func TestProjectDelete(t *testing.T) {
 	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			// Create account and project.
 			a := &Account{}
-			assert.NoError(t, txn.CreateAccount(a))
+			assert.NoError(t, tx.CreateAccount(a))
 			p := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(p))
 
@@ -99,7 +99,7 @@ func TestProjectDelete(t *testing.T) {
 			assert.NoError(t, p.Delete())
 
 			// Retrieve the project again.
-			_, err := txn.Project(1)
+			_, err := tx.Project(1)
 			assert.Equal(t, err, ErrProjectNotFound)
 			return nil
 		})
@@ -109,10 +109,10 @@ func TestProjectDelete(t *testing.T) {
 // Ensure that a project can generate a random API key.
 func TestProjectGenerateAPIKey(t *testing.T) {
 	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			// Create an account and project.
 			a := &Account{}
-			assert.NoError(t, txn.CreateAccount(a))
+			assert.NoError(t, tx.CreateAccount(a))
 			p := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(p))
 
@@ -120,7 +120,7 @@ func TestProjectGenerateAPIKey(t *testing.T) {
 			assert.Equal(t, len(p.APIKey), 36)
 
 			// Lookup project by API key.
-			p2, err := txn.ProjectByAPIKey(p.APIKey)
+			p2, err := tx.ProjectByAPIKey(p.APIKey)
 			assert.NoError(t, err)
 			assert.Equal(t, p2.ID(), 1)
 
@@ -132,11 +132,11 @@ func TestProjectGenerateAPIKey(t *testing.T) {
 			assert.NotEqual(t, p.APIKey, apiKey)
 
 			// Make sure we can lookup by the new key and not the old.
-			p3, err := txn.ProjectByAPIKey(p.APIKey)
+			p3, err := tx.ProjectByAPIKey(p.APIKey)
 			assert.NoError(t, err)
 			assert.Equal(t, p3.ID(), 1)
 
-			p4, err := txn.ProjectByAPIKey(apiKey)
+			p4, err := tx.ProjectByAPIKey(apiKey)
 			assert.Equal(t, err, ErrProjectNotFound)
 			assert.Nil(t, p4)
 
@@ -149,9 +149,9 @@ func TestProjectGenerateAPIKey(t *testing.T) {
 func TestProjectFunnels(t *testing.T) {
 	withDB(func(db *DB) {
 		// Create two projects.
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			a := &Account{}
-			assert.NoError(t, txn.CreateAccount(a))
+			assert.NoError(t, tx.CreateAccount(a))
 			p1 := &Project{Name: "Project X"}
 			assert.NoError(t, a.CreateProject(p1))
 			p2 := &Project{Name: "Project Y"}
@@ -167,16 +167,16 @@ func TestProjectFunnels(t *testing.T) {
 		})
 
 		// Check first project.
-		db.With(func(txn *Transaction) error {
-			p, _ := txn.Project(1)
+		db.With(func(tx *Tx) error {
+			p, _ := tx.Project(1)
 			funnels, err := p.Funnels()
 			if assert.NoError(t, err) && assert.Equal(t, len(funnels), 2) {
-				assert.Equal(t, funnels[0].Transaction, txn)
+				assert.Equal(t, funnels[0].Tx, tx)
 				assert.Equal(t, funnels[0].ID(), 2)
 				assert.Equal(t, funnels[0].ProjectID, 1)
 				assert.Equal(t, funnels[0].Name, "Funnel A")
 
-				assert.Equal(t, funnels[1].Transaction, txn)
+				assert.Equal(t, funnels[1].Tx, tx)
 				assert.Equal(t, funnels[1].ID(), 1)
 				assert.Equal(t, funnels[1].ProjectID, 1)
 				assert.Equal(t, funnels[1].Name, "Funnel B")
@@ -194,11 +194,11 @@ func TestProjectFunnels(t *testing.T) {
 		})
 
 		// Check second project's funnels.
-		db.With(func(txn *Transaction) error {
-			p, _ := txn.Project(2)
+		db.With(func(tx *Tx) error {
+			p, _ := tx.Project(2)
 			funnels, err := p.Funnels()
 			if assert.NoError(t, err) && assert.Equal(t, len(funnels), 1) {
-				assert.Equal(t, funnels[0].Transaction, txn)
+				assert.Equal(t, funnels[0].Tx, tx)
 				assert.Equal(t, funnels[0].ID(), 3)
 				assert.Equal(t, funnels[0].ProjectID, 2)
 				assert.Equal(t, funnels[0].Name, "Funnel C")
@@ -211,9 +211,9 @@ func TestProjectFunnels(t *testing.T) {
 // Ensure that a project can track events and insert them into Sky.
 func TestProjectTrack(t *testing.T) {
 	withDB(func(db *DB) {
-		db.Do(func(txn *Transaction) error {
+		db.Do(func(tx *Tx) error {
 			a, p := &Account{}, &Project{Name: "prj"}
-			txn.CreateAccount(a)
+			tx.CreateAccount(a)
 			a.CreateProject(p)
 			p.Reset()
 

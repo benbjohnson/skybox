@@ -16,10 +16,10 @@ func (h *trackHandler) install() {
 }
 
 func (h *trackHandler) track(w http.ResponseWriter, r *http.Request) {
-	txn := h.transaction(r)
+	tx := h.transaction(r)
 
 	// Find project by API key.
-	p, err := txn.ProjectByAPIKey(r.FormValue("apiKey"))
+	p, err := tx.ProjectByAPIKey(r.FormValue("apiKey"))
 	if err != nil {
 		http.Error(w, "invalid api key", http.StatusBadRequest)
 		return

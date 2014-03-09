@@ -28,11 +28,11 @@ var schema = []*sky.Property{
 // Project represents a collection of Persons and their events.
 // A Project belongs to an Account.
 type Project struct {
-	Transaction *Transaction
-	id          int
-	AccountID   int    `json:"accountID"`
-	Name        string `json:"name"`
-	APIKey      string `json:"apiKey"`
+	Tx        *Tx
+	id        int
+	AccountID int    `json:"accountID"`
+	Name      string `json:"name"`
+	APIKey    string `json:"apiKey"`
 }
 
 // ID returns the project identifier.
@@ -49,7 +49,7 @@ func (p *Project) SkyTableName() string {
 // SkyTable returns a reference to the table used by Sky.
 func (p *Project) SkyTable() *sky.Table {
 	return &sky.Table{
-		Client: &p.Transaction.db.SkyClient,
+		Client: &p.Tx.db.SkyClient,
 		Name:   p.SkyTableName(),
 	}
 }
@@ -63,7 +63,7 @@ func (p *Project) Validate() error {
 }
 
 func (p *Project) get() ([]byte, error) {
-	value := p.Transaction.Bucket("projects").Get(itob(p.id))
+	value := p.Tx.Bucket("projects").Get(itob(p.id))
 	if value == nil {
 		return nil, ErrProjectNotFound
 	}
@@ -91,17 +91,17 @@ func (p *Project) Save() error {
 		}
 	}
 
-	return p.Transaction.Bucket("projects").Put(itob(p.id), marshal(p))
+	return p.Tx.Bucket("projects").Put(itob(p.id), marshal(p))
 }
 
 // Delete removes the Project from the database.
 func (p *Project) Delete() error {
 	// Remove project entry.
-	err := p.Transaction.Bucket("projects").Delete(itob(p.id))
+	err := p.Tx.Bucket("projects").Delete(itob(p.id))
 	assert(err == nil, "project delete error: %s", err)
 
 	// Remove project id from indices.
-	removeFromForeignKeyIndex(p.Transaction, "account.projects", itob(p.AccountID), p.id)
+	removeFromForeignKeyIndex(p.Tx, "account.projects", itob(p.AccountID), p.id)
 
 	return nil
 }
@@ -110,7 +110,7 @@ func (p *Project) Delete() error {
 func (p *Project) GenerateAPIKey() error {
 	// Remove old API key from index.
 	if p.APIKey != "" {
-		removeFromUniqueIndex(p.Transaction, "projects.APIKey", []byte(p.APIKey))
+		removeFromUniqueIndex(p.Tx, "projects.APIKey", []byte(p.APIKey))
 	}
 
 	// Generate new API key.
@@ -121,7 +121,7 @@ func (p *Project) GenerateAPIKey() error {
 	p.APIKey = apiKey.String()
 
 	// Update index.
-	insertIntoUniqueIndex(p.Transaction, "projects.APIKey", []byte(p.APIKey), p.ID())
+	insertIntoUniqueIndex(p.Tx, "projects.APIKey", []byte(p.APIKey), p.ID())
 
 	return nil
 }
@@ -130,7 +130,7 @@ func (p *Project) GenerateAPIKey() error {
 // Only funnels associated with this project will be returned.
 func (p *Project) Funnel(id int) (*Funnel, error) {
 	assert(p.id > 0, "find funnel on unsaved project: %d", p.id)
-	f, err := p.Transaction.Funnel(id)
+	f, err := p.Tx.Funnel(id)
 	if err != nil {
 		return nil, err
 	} else if f.ProjectID != p.ID() {
@@ -152,15 +152,15 @@ func (p *Project) CreateFunnel(f *Funnel) error {
 		return err
 	}
 
-	f.Transaction = p.Transaction
+	f.Tx = p.Tx
 	f.ProjectID = p.id
 
 	// Generate new id.
-	f.id, _ = p.Transaction.Bucket("funnels").NextSequence()
+	f.id, _ = p.Tx.Bucket("funnels").NextSequence()
 	assert(p.id > 0, "funnel sequence error")
 
 	// Add funnel id to secondary index.
-	insertIntoForeignKeyIndex(p.Transaction, "project.funnels", itob(p.id), f.id)
+	insertIntoForeignKeyIndex(p.Tx, "project.funnels", itob(p.id), f.id)
 
 	// Save funnel.
 	return f.Save()
@@ -169,10 +169,10 @@ func (p *Project) CreateFunnel(f *Funnel) error {
 // Funnels retrieves a list of all funnels for the project.
 func (p *Project) Funnels() (Funnels, error) {
 	funnels := make(Funnels, 0)
-	index := getForeignKeyIndex(p.Transaction, "project.funnels", itob(p.id))
+	index := getForeignKeyIndex(p.Tx, "project.funnels", itob(p.id))
 
 	for _, id := range index {
-		f := &Funnel{Transaction: p.Transaction, id: id}
+		f := &Funnel{Tx: p.Tx, id: id}
 		err := f.Load()
 		assert(err == nil, "funnel (%d) not found from project.funnels index (%d)", f.id, p.id)
 		assert(f.ProjectID == p.id, "funnel/project mismatch: %d (%d) not in %d", f.id, f.ProjectID, p.id)
@@ -233,13 +233,13 @@ func (p *Project) Migrate() error {
 
 // Reset drops the sky table and recreates it.
 func (p *Project) Reset() error {
-	c := &p.Transaction.db.SkyClient
+	c := &p.Tx.db.SkyClient
 	c.DeleteTable(p.SkyTableName())
 	return p.Migrate()
 }
 
 func (p *Project) createSkyTableIfNotExists() error {
-	c := &p.Transaction.db.SkyClient
+	c := &p.Tx.db.SkyClient
 	if t, err := c.Table(p.SkyTableName()); t != nil && err == nil {
 		return err
 	}

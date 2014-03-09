@@ -12,32 +12,32 @@ import (
 
 type handler struct {
 	sync.RWMutex
-	server       *Server
-	transactions map[*http.Request]*db.Transaction
+	server *Server
+	txs    map[*http.Request]*db.Tx
 }
 
 // transaction retrieves a transaction for a given request.
-func (h *handler) transaction(r *http.Request) *db.Transaction {
+func (h *handler) transaction(r *http.Request) *db.Tx {
 	h.RLock()
 	defer h.RUnlock()
-	return h.transactions[r]
+	return h.txs[r]
 }
 
-// setTransaction sets a transaction for a given request.
-func (h *handler) setTransaction(r *http.Request, t *db.Transaction) {
+// setTx sets a transaction for a given request.
+func (h *handler) setTx(r *http.Request, t *db.Tx) {
 	h.Lock()
 	defer h.Unlock()
-	if h.transactions == nil {
-		h.transactions = make(map[*http.Request]*db.Transaction)
+	if h.txs == nil {
+		h.txs = make(map[*http.Request]*db.Tx)
 	}
-	h.transactions[r] = t
+	h.txs[r] = t
 }
 
-// removeTransaction removes a transaction for a request.
-func (h *handler) removeTransaction(r *http.Request) {
+// removeTx removes a transaction for a request.
+func (h *handler) removeTx(r *http.Request) {
 	h.Lock()
 	defer h.Unlock()
-	delete(h.transactions, r)
+	delete(h.txs, r)
 }
 
 // transactional executes a handler in the context of a read/write transaction.
@@ -62,14 +62,14 @@ func (h *handler) session(r *http.Request) *sessions.Session {
 
 // auth returns the logged in user and account for a given request.
 func (h *handler) auth(r *http.Request) (*db.User, *db.Account) {
-	txn := h.transaction(r)
+	tx := h.transaction(r)
 	session := h.session(r)
 	id, ok := session.Values["UserID"]
 	if !ok {
 		return nil, nil
 	}
 	if id, ok := id.(int); ok {
-		u, err := txn.User(id)
+		u, err := tx.User(id)
 		if err != nil {
 			log.Println("[warn] session user not found: %v", err)
 		}
@@ -93,10 +93,10 @@ type transactor struct {
 }
 
 func (t *transactor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	t.parent.server.DB.With(func(txn *db.Transaction) error {
-		t.parent.setTransaction(req, txn)
+	t.parent.server.DB.With(func(tx *db.Tx) error {
+		t.parent.setTx(req, tx)
 		t.handler.ServeHTTP(w, req)
-		t.parent.removeTransaction(req)
+		t.parent.removeTx(req)
 		return nil
 	})
 }
@@ -108,10 +108,10 @@ type rwtransactor struct {
 }
 
 func (t *rwtransactor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	err := t.parent.server.DB.Do(func(txn *db.Transaction) error {
-		t.parent.setTransaction(req, txn)
+	err := t.parent.server.DB.Do(func(tx *db.Tx) error {
+		t.parent.setTx(req, tx)
 		t.handler.ServeHTTP(w, req)
-		t.parent.removeTransaction(req)
+		t.parent.removeTx(req)
 		return nil
 	})
 	if err != nil {

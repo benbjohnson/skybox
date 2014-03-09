@@ -38,12 +38,12 @@ const (
 // User represents a user within the system.
 // A User belongs to an Account and can access all Projects within the Account.
 type User struct {
-	Transaction *Transaction
-	id          int
-	AccountID   int    `json:"accountID"`
-	Email       string `json:"email"`
-	Password    string `json:"-"`
-	Hash        []byte `json:"hash"`
+	Tx        *Tx
+	id        int
+	AccountID int    `json:"accountID"`
+	Email     string `json:"email"`
+	Password  string `json:"-"`
+	Hash      []byte `json:"hash"`
 }
 
 // ID returns the user identifier.
@@ -53,7 +53,7 @@ func (u *User) ID() int {
 
 // Account returns a reference to the user's account.
 func (u *User) Account() (*Account, error) {
-	return u.Transaction.Account(u.AccountID)
+	return u.Tx.Account(u.AccountID)
 }
 
 // Validate validates all fields of the user.
@@ -71,7 +71,7 @@ func (u *User) Validate() error {
 }
 
 func (u *User) get() ([]byte, error) {
-	value := u.Transaction.Bucket("users").Get(itob(u.id))
+	value := u.Tx.Bucket("users").Get(itob(u.id))
 	if value == nil {
 		return nil, ErrUserNotFound
 	}
@@ -91,18 +91,18 @@ func (u *User) Load() error {
 // Save commits the User to the database.
 func (u *User) Save() error {
 	assert(u.id > 0, "uninitialized user cannot be saved")
-	return u.Transaction.Bucket("users").Put(itob(u.id), marshal(u))
+	return u.Tx.Bucket("users").Put(itob(u.id), marshal(u))
 }
 
 // Delete removes the User from the database.
 func (u *User) Delete() error {
 	// Remove user entry.
-	err := u.Transaction.Bucket("users").Delete(itob(u.id))
+	err := u.Tx.Bucket("users").Delete(itob(u.id))
 	assert(err == nil, "user delete error: %s", err)
 
 	// Remove user id from indices.
-	removeFromForeignKeyIndex(u.Transaction, "account.users", itob(u.AccountID), u.id)
-	removeFromUniqueIndex(u.Transaction, "user.email", []byte(u.Email))
+	removeFromForeignKeyIndex(u.Tx, "account.users", itob(u.AccountID), u.id)
+	removeFromUniqueIndex(u.Tx, "user.email", []byte(u.Email))
 
 	return nil
 }

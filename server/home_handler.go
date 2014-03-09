@@ -35,10 +35,10 @@ func (h *homeHandler) login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *homeHandler) doLogin(w http.ResponseWriter, r *http.Request) {
-	txn, session := h.transaction(r), h.session(r)
+	tx, session := h.transaction(r), h.session(r)
 
 	// Retrieve user.
-	user, err := txn.UserByEmail(r.FormValue("email"))
+	user, err := tx.UserByEmail(r.FormValue("email"))
 	if err != nil {
 		session.AddFlash(err.Error())
 		http.Redirect(w, r, "/login", http.StatusFound)
@@ -71,12 +71,12 @@ func (h *homeHandler) signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *homeHandler) doSignup(w http.ResponseWriter, r *http.Request) {
-	txn, session := h.transaction(r), h.session(r)
+	tx, session := h.transaction(r), h.session(r)
 
 	// Create a new account.
 	account := &db.Account{}
-	if err := txn.CreateAccount(account); err != nil {
-		txn.Rollback()
+	if err := tx.CreateAccount(account); err != nil {
+		tx.Rollback()
 		session.AddFlash(err.Error())
 		http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
 		return
@@ -90,7 +90,7 @@ func (h *homeHandler) doSignup(w http.ResponseWriter, r *http.Request) {
 
 	// Create default project.
 	if err := account.CreateProject(&db.Project{Name: "Default Project"}); err != nil {
-		txn.Rollback()
+		tx.Rollback()
 		session.AddFlash(err.Error())
 		http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
 		return
@@ -98,7 +98,7 @@ func (h *homeHandler) doSignup(w http.ResponseWriter, r *http.Request) {
 
 	// Create user.
 	if err := account.CreateUser(user); err != nil {
-		txn.Rollback()
+		tx.Rollback()
 		session.AddFlash(err.Error())
 		http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
 		return

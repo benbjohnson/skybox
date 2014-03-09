@@ -54,7 +54,7 @@ func (h *projectsHandler) save(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	user, account := h.auth(r)
 	session := h.session(r)
-	txn := h.transaction(r)
+	tx := h.transaction(r)
 
 	// Find project.
 	var project = &db.Project{}
@@ -79,7 +79,7 @@ func (h *projectsHandler) save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		txn.Rollback()
+		tx.Rollback()
 		session.AddFlash(err.Error())
 		session.Save(r, w)
 		t := &template.ProjectTemplate{template.New(session, user, account), project}

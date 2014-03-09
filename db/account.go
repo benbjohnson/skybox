@@ -12,8 +12,8 @@ var (
 
 // Account represents a collection of Users and Projects.
 type Account struct {
-	Transaction *Transaction
-	id          int
+	Tx *Tx
+	id int
 }
 
 // ID returns the account identifier.
@@ -27,7 +27,7 @@ func (a *Account) Validate() error {
 }
 
 func (a *Account) get() ([]byte, error) {
-	value := a.Transaction.Bucket("accounts").Get(itob(a.id))
+	value := a.Tx.Bucket("accounts").Get(itob(a.id))
 	if value == nil {
 		return nil, ErrAccountNotFound
 	}
@@ -47,12 +47,12 @@ func (a *Account) Load() error {
 // Save commits the Account to the database.
 func (a *Account) Save() error {
 	assert(a.id > 0, "uninitialized account cannot be saved")
-	return a.Transaction.Bucket("accounts").Put(itob(a.id), marshal(a))
+	return a.Tx.Bucket("accounts").Put(itob(a.id), marshal(a))
 }
 
 // Delete removes the account from the database.
 func (a *Account) Delete() error {
-	err := a.Transaction.Bucket("accounts").Delete(itob(a.id))
+	err := a.Tx.Bucket("accounts").Delete(itob(a.id))
 	assert(err == nil, "account delete error: %s", err)
 
 	// TODO: Remove all users.
@@ -74,7 +74,7 @@ func (a *Account) CreateUser(u *User) error {
 		return err
 	}
 
-	u.Transaction = a.Transaction
+	u.Tx = a.Tx
 	u.AccountID = a.id
 
 	// Verify account exists.
@@ -83,17 +83,17 @@ func (a *Account) CreateUser(u *User) error {
 	}
 
 	// Verify that email is not taken.
-	if id := getUniqueIndex(a.Transaction, "user.email", []byte(u.Email)); id != 0 {
+	if id := getUniqueIndex(a.Tx, "user.email", []byte(u.Email)); id != 0 {
 		return ErrUserEmailTaken
 	}
 
 	// Generate new id.
-	u.id, _ = a.Transaction.Bucket("users").NextSequence()
+	u.id, _ = a.Tx.Bucket("users").NextSequence()
 	assert(u.id > 0, "user sequence error")
 
 	// Add user id to secondary index.
-	insertIntoForeignKeyIndex(a.Transaction, "account.users", itob(a.id), u.id)
-	insertIntoUniqueIndex(a.Transaction, "user.email", []byte(u.Email), u.id)
+	insertIntoForeignKeyIndex(a.Tx, "account.users", itob(a.id), u.id)
+	insertIntoUniqueIndex(a.Tx, "user.email", []byte(u.Email), u.id)
 
 	// Save user.
 	return u.Save()
@@ -102,10 +102,10 @@ func (a *Account) CreateUser(u *User) error {
 // Users retrieves a list of all users for the account.
 func (a *Account) Users() (Users, error) {
 	users := make(Users, 0)
-	index := getForeignKeyIndex(a.Transaction, "account.users", itob(a.id))
+	index := getForeignKeyIndex(a.Tx, "account.users", itob(a.id))
 
 	for _, id := range index {
-		u := &User{Transaction: a.Transaction, id: id}
+		u := &User{Tx: a.Tx, id: id}
 		err := u.Load()
 		assert(err == nil, "user (%d) not found from account.users index (%d)", u.id, a.id)
 		assert(u.AccountID == a.id, "user/account mismatch: %d (%d) not in %d", u.id, u.AccountID, a.id)
@@ -120,7 +120,7 @@ func (a *Account) Users() (Users, error) {
 // Only projects associated with this account will be returned.
 func (a *Account) Project(id int) (*Project, error) {
 	assert(a.id > 0, "find project on unsaved account: %d", a.id)
-	p, err := a.Transaction.Project(id)
+	p, err := a.Tx.Project(id)
 	if err != nil {
 		return nil, err
 	} else if p.AccountID != a.ID() {
@@ -137,7 +137,7 @@ func (a *Account) CreateProject(p *Project) error {
 		return err
 	}
 
-	p.Transaction = a.Transaction
+	p.Tx = a.Tx
 	p.AccountID = a.id
 
 	// Verify account exists.
@@ -146,11 +146,11 @@ func (a *Account) CreateProject(p *Project) error {
 	}
 
 	// Generate new id.
-	p.id, _ = a.Transaction.Bucket("projects").NextSequence()
+	p.id, _ = a.Tx.Bucket("projects").NextSequence()
 	assert(p.id > 0, "project sequence error")
 
 	// Add project id to secondary index.
-	insertIntoForeignKeyIndex(a.Transaction, "account.projects", itob(a.id), p.id)
+	insertIntoForeignKeyIndex(a.Tx, "account.projects", itob(a.id), p.id)
 
 	// Save project.
 	if err := p.Save(); err != nil {
@@ -168,10 +168,10 @@ func (a *Account) CreateProject(p *Project) error {
 // Projects retrieves a list of all projects for the account.
 func (a *Account) Projects() (Projects, error) {
 	projects := make(Projects, 0)
-	index := getForeignKeyIndex(a.Transaction, "account.projects", itob(a.id))
+	index := getForeignKeyIndex(a.Tx, "account.projects", itob(a.id))
 
 	for _, id := range index {
-		p := &Project{Transaction: a.Transaction, id: id}
+		p := &Project{Tx: a.Tx, id: id}
 		err := p.Load()
 		assert(err == nil, "project (%d) not found from account.projects index (%d)", p.id, a.id)
 		assert(p.AccountID == a.id, "project/account mismatch: %d (%d) not in %d", p.id, p.AccountID, a.id)
