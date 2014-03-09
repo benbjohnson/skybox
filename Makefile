@@ -25,7 +25,7 @@ less:
 	@lessc server/assets/application.less > server/assets/application.css
 
 run: assets templates
-	@go run ./cmd/skybox/main.go
+	@go run ./cmd/skyboxd/main.go
 
 templates:
 	@ego server/template

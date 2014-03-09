@@ -9,18 +9,18 @@ analyzing how they behave.
 
 ## Getting Started
 
-To run skybox, you'll just need to install Sky v0.4.0 or higher and point to it
-in the skybox configuration:
+To run skybox, you'll just need to run Sky v0.4.0 or higher and execute the
+skybox server:
 
 ```sh
-$ skybox --sky-host=localhost:8585
+$ skyboxd
 ```
 
 An easier to way to get up and running is simply to use the prebuilt Docker container:
 
 ```sh
-$ docker pull skydb/skybox
-$ docker run skydb/skybox
+$ docker pull skybox/skyboxd
+$ docker run skybox/skyboxd
 ```
 
 <!-- TODO: Expand on 'Getting Started' -->

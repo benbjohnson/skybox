@@ -21,7 +21,7 @@ var (
 )
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: skybox [opts]")
+	fmt.Fprintln(os.Stderr, "usage: skyboxd [opts]")
 	flag.PrintDefaults()
 	os.Exit(2)
 }
