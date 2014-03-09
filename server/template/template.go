@@ -21,8 +21,9 @@ type AccountTemplate struct {
 
 type FunnelTemplate struct {
 	*Template
-	Funnel    *db.Funnel
-	Resources []string
+	Funnel       *db.Funnel
+	FunnelResult *db.FunnelResult
+	Resources    []string
 }
 
 type FunnelsTemplate struct {

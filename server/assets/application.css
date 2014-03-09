@@ -17,6 +17,21 @@ body {
   margin-right: -30px;
 }
 /***************************************
+ * charts
+ ***************************************/
+.chart .bar {
+  fill: steelblue;
+}
+.chart .axis {
+  font: 10px sans-serif;
+}
+.chart .axis path,
+.chart .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+/***************************************
  * login & signup
  ***************************************/
 body#login .navbar,

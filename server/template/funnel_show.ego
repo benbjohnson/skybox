@@ -1,0 +1,58 @@
+<%! func (t *FunnelTemplate) Show(w io.Writer) error %>
+
+<%% import "encoding/json" %%>
+<%% import "fmt" %%>
+<%% import "io" %%>
+<%% import "regexp" %%>
+
+<!DOCTYPE html>
+<html lang="en">
+  <% t.Head(w, "") %>
+
+  <body id="index">
+    <div class="container">
+      <% t.Nav(w) %>
+
+      <div class="page-header">
+        <h3>
+          <%= t.Funnel.Name %>
+          <div class="pull-right">
+            <a href="/funnels" class="btn btn-default">Back</a>
+          </div>
+        </h3>
+      </div>
+
+      <div class="row">
+        <div class="chart"></div>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for _, f := range t.FunnelResult.Steps { %>
+            <tr>
+              <td>
+                <%= regexp.MustCompile(`^resource == "(.+)"$`).ReplaceAllString(f.Condition, "$1") %>
+              </td>
+              <td>
+                <%= f.Count %>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </div>
+    </div> <!-- /container -->
+  </body>
+
+  <script src="/assets/funnel_show.js"></script>
+  <script>
+    var result = <% json.NewEncoder(w).Encode(t.FunnelResult) %>;
+    update(result);
+  </script>
+</html>
+

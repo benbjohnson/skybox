@@ -20,7 +20,9 @@ func newFunnelsHandler(s *Server) *funnelsHandler {
 
 func (h *funnelsHandler) install() {
 	h.server.Handle("/funnels", h.transact(h.authorize(http.HandlerFunc(h.index)))).Methods("GET")
-	h.server.Handle("/funnels/{id}", h.transact(h.authorize(http.HandlerFunc(h.edit)))).Methods("GET")
+	h.server.Handle("/funnels/{id}", h.transact(h.authorize(http.HandlerFunc(h.show)))).Methods("GET")
+	h.server.Handle("/funnels/new", h.transact(h.authorize(http.HandlerFunc(h.edit)))).Methods("GET")
+	h.server.Handle("/funnels/{id}/edit", h.transact(h.authorize(http.HandlerFunc(h.edit)))).Methods("GET")
 	h.server.Handle("/funnels/{id}", h.rwtransact(h.authorize(http.HandlerFunc(h.save)))).Methods("POST")
 }
 
@@ -29,6 +31,33 @@ func (h *funnelsHandler) index(w http.ResponseWriter, r *http.Request) {
 	funnels, _ := account.Funnels()
 	t := &template.FunnelsTemplate{template.New(h.session(r), user, account), funnels}
 	t.Index(w)
+}
+
+func (h *funnelsHandler) show(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user, account := h.auth(r)
+
+	// Find funnel by id.
+	id, _ := strconv.Atoi(vars["id"])
+	f, err := account.Funnel(id)
+	if err != nil {
+		h.notFound(w, r)
+		return
+	}
+
+	// Execute the funnel query.
+	result, err := f.Query()
+	if err != nil {
+		http.Error(w, "funnel query: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	t := &template.FunnelTemplate{
+		Template:     template.New(h.session(r), user, account),
+		Funnel:       f,
+		FunnelResult: result,
+	}
+	t.Show(w)
 }
 
 func (h *funnelsHandler) edit(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +85,11 @@ func (h *funnelsHandler) edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t := &template.FunnelTemplate{template.New(h.session(r), user, account), f, resources}
+	t := &template.FunnelTemplate{
+		Template:  template.New(h.session(r), user, account),
+		Funnel:    f,
+		Resources: resources,
+	}
 	t.Edit(w)
 }
 
@@ -102,7 +135,10 @@ func (h *funnelsHandler) save(w http.ResponseWriter, r *http.Request) {
 		tx.Rollback()
 		session.AddFlash(err.Error())
 		session.Save(r, w)
-		t := &template.FunnelTemplate{template.New(session, user, account), f, nil}
+		t := &template.FunnelTemplate{
+			Template: template.New(session, user, account),
+			Funnel:   f,
+		}
 		t.Edit(w)
 		return
 	}

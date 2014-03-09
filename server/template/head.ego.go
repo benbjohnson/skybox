@@ -70,14 +70,22 @@ func (t *Template) Head(w io.Writer, title string) error {
 		return err
 	}
 //line head.ego:25
-	if _, err := fmt.Fprintf(w, "<script src=\"/assets/bootstrap.min.js\">"); err != nil {
+	if _, err := fmt.Fprintf(w, "<script src=\"/assets/d3.v3.min.js\">"); err != nil {
 		return err
 	}
 //line head.ego:25
-	if _, err := fmt.Fprintf(w, "</script>\n"); err != nil {
+	if _, err := fmt.Fprintf(w, "</script>\n  "); err != nil {
 		return err
 	}
 //line head.ego:26
+	if _, err := fmt.Fprintf(w, "<script src=\"/assets/bootstrap.min.js\">"); err != nil {
+		return err
+	}
+//line head.ego:26
+	if _, err := fmt.Fprintf(w, "</script>\n"); err != nil {
+		return err
+	}
+//line head.ego:27
 	if _, err := fmt.Fprintf(w, "</head>\n"); err != nil {
 		return err
 	}

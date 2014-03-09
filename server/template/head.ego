@@ -21,5 +21,6 @@ if title == "" {
   <link href="/assets/bootstrap.min.css" rel="stylesheet">
   <link href="/assets/application.css" rel="stylesheet">
   <script src="/assets/jquery-2.1.0.min.js"></script>
+  <script src="/assets/d3.v3.min.js"></script>
   <script src="/assets/bootstrap.min.js"></script>
 </head>
