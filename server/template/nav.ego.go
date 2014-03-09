@@ -119,130 +119,150 @@ func (t *Template) Nav(w io.Writer) error {
 			return err
 		}
 //line nav.ego:25
+		if _, err := fmt.Fprintf(w, "<a href=\"/funnels\">Funnels"); err != nil {
+			return err
+		}
+//line nav.ego:25
+		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
+			return err
+		}
+//line nav.ego:25
+		if _, err := fmt.Fprintf(w, "</li>\n          "); err != nil {
+			return err
+		}
+//line nav.ego:26
+		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
+			return err
+		}
+//line nav.ego:26
 		if _, err := fmt.Fprintf(w, "<a href=\"/projects\">Projects"); err != nil {
 			return err
 		}
-//line nav.ego:25
+//line nav.ego:26
 		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
 			return err
 		}
-//line nav.ego:25
+//line nav.ego:26
 		if _, err := fmt.Fprintf(w, "</li>\n          "); err != nil {
-			return err
-		}
-//line nav.ego:26
-		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
-			return err
-		}
-//line nav.ego:26
-		if _, err := fmt.Fprintf(w, "<a href=\"/users\">Users"); err != nil {
-			return err
-		}
-//line nav.ego:26
-		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
-			return err
-		}
-//line nav.ego:26
-		if _, err := fmt.Fprintf(w, "</li>\n        "); err != nil {
 			return err
 		}
 //line nav.ego:27
+		if _, err := fmt.Fprintf(w, "<!-- TODO: "); err != nil {
+			return err
+		}
+//line nav.ego:27
+		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
+			return err
+		}
+//line nav.ego:27
+		if _, err := fmt.Fprintf(w, "<a href=\"/users\">Users"); err != nil {
+			return err
+		}
+//line nav.ego:27
+		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
+			return err
+		}
+//line nav.ego:27
+		if _, err := fmt.Fprintf(w, "</li> -->\n        "); err != nil {
+			return err
+		}
+//line nav.ego:28
 		if _, err := fmt.Fprintf(w, "</ul>\n\n        "); err != nil {
 			return err
 		}
-//line nav.ego:29
+//line nav.ego:30
 		if _, err := fmt.Fprintf(w, "<ul class=\"nav navbar-nav navbar-right\">\n          "); err != nil {
-			return err
-		}
-//line nav.ego:30
-		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
-			return err
-		}
-//line nav.ego:30
-		if _, err := fmt.Fprintf(w, "<a href=\"/logout\">Log out"); err != nil {
-			return err
-		}
-//line nav.ego:30
-		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
-			return err
-		}
-//line nav.ego:30
-		if _, err := fmt.Fprintf(w, "</li>\n        "); err != nil {
 			return err
 		}
 //line nav.ego:31
-		if _, err := fmt.Fprintf(w, "</ul>\n      "); err != nil {
-			return err
-		}
-//line nav.ego:32
-	} else {
-//line nav.ego:33
-		if _, err := fmt.Fprintf(w, "\n        "); err != nil {
-			return err
-		}
-//line nav.ego:33
-		if _, err := fmt.Fprintf(w, "<ul class=\"nav navbar-nav navbar-right\">\n          "); err != nil {
-			return err
-		}
-//line nav.ego:34
 		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
 			return err
 		}
-//line nav.ego:34
-		if _, err := fmt.Fprintf(w, "<a href=\"/login\">Sign in"); err != nil {
+//line nav.ego:31
+		if _, err := fmt.Fprintf(w, "<a href=\"/logout\">Log out"); err != nil {
 			return err
 		}
-//line nav.ego:34
+//line nav.ego:31
 		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
 			return err
 		}
-//line nav.ego:34
-		if _, err := fmt.Fprintf(w, "</li>\n          "); err != nil {
-			return err
-		}
-//line nav.ego:35
-		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
-			return err
-		}
-//line nav.ego:35
-		if _, err := fmt.Fprintf(w, "<a href=\"/signup\">Sign up"); err != nil {
-			return err
-		}
-//line nav.ego:35
-		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
-			return err
-		}
-//line nav.ego:35
+//line nav.ego:31
 		if _, err := fmt.Fprintf(w, "</li>\n        "); err != nil {
 			return err
 		}
-//line nav.ego:36
+//line nav.ego:32
 		if _, err := fmt.Fprintf(w, "</ul>\n      "); err != nil {
 			return err
 		}
+//line nav.ego:33
+	} else {
+//line nav.ego:34
+		if _, err := fmt.Fprintf(w, "\n        "); err != nil {
+			return err
+		}
+//line nav.ego:34
+		if _, err := fmt.Fprintf(w, "<ul class=\"nav navbar-nav navbar-right\">\n          "); err != nil {
+			return err
+		}
+//line nav.ego:35
+		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
+			return err
+		}
+//line nav.ego:35
+		if _, err := fmt.Fprintf(w, "<a href=\"/login\">Sign in"); err != nil {
+			return err
+		}
+//line nav.ego:35
+		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
+			return err
+		}
+//line nav.ego:35
+		if _, err := fmt.Fprintf(w, "</li>\n          "); err != nil {
+			return err
+		}
+//line nav.ego:36
+		if _, err := fmt.Fprintf(w, "<li>"); err != nil {
+			return err
+		}
+//line nav.ego:36
+		if _, err := fmt.Fprintf(w, "<a href=\"/signup\">Sign up"); err != nil {
+			return err
+		}
+//line nav.ego:36
+		if _, err := fmt.Fprintf(w, "</a>"); err != nil {
+			return err
+		}
+//line nav.ego:36
+		if _, err := fmt.Fprintf(w, "</li>\n        "); err != nil {
+			return err
+		}
 //line nav.ego:37
-	}
+		if _, err := fmt.Fprintf(w, "</ul>\n      "); err != nil {
+			return err
+		}
 //line nav.ego:38
+	}
+//line nav.ego:39
 	if _, err := fmt.Fprintf(w, "\n    "); err != nil {
 		return err
 	}
-//line nav.ego:38
+//line nav.ego:39
 	if _, err := fmt.Fprintf(w, "</div>"); err != nil {
 		return err
 	}
-//line nav.ego:38
+//line nav.ego:39
 	if _, err := fmt.Fprintf(w, "<!--/.nav-collapse -->\n  "); err != nil {
 		return err
 	}
-//line nav.ego:39
+//line nav.ego:40
 	if _, err := fmt.Fprintf(w, "</div>"); err != nil {
 		return err
 	}
-//line nav.ego:39
+//line nav.ego:40
 	if _, err := fmt.Fprintf(w, "<!--/.container-fluid -->\n"); err != nil {
 		return err
 	}
-//line nav.ego:40
+//line nav.ego:41
 	if _, err := fmt.Fprintf(w, "</div>\n"); err != nil {
 		return err
 	}

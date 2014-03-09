@@ -24,3 +24,8 @@ type ProjectsTemplate struct {
 	*Template
 	Projects []*db.Project
 }
+
+type FunnelTemplate struct {
+	*Template
+	Funnel *db.Funnel
+}

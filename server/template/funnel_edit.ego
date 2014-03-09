@@ -1,0 +1,60 @@
+<%! func (t *FunnelTemplate) Edit(w io.Writer) error %>
+
+<%% import "fmt" %%>
+<%% import "io" %%>
+
+<!DOCTYPE html>
+<html lang="en">
+  <% t.Head(w, "") %>
+
+  <body id="index">
+    <div class="container">
+      <% t.Nav(w) %>
+
+      <div class="page-header">
+        <h3>
+          <% if t.Funnel.ID() == 0 { %>
+            New Funnel
+          <% } else { %>
+            Edit Funnel
+          <% } %>
+        </h3>
+      </div>
+
+      <div class="row">
+        <form action="/funnels/<%= t.Funnel.ID() %>" method="POST" role="form" class="col-sm-6 col-md-5 col-lg-5">
+          <input type="hidden" name="id" value="<%= t.Funnel.ID() %>"/>
+
+          <div class="form-group">
+            <label for="name">Funnel Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="<%= t.Funnel.Name %>"/>
+          </div>
+
+          <div class="form-group">
+            <label for="name">Project</label>
+            <input type="text" class="form-control" id="projectID" name="projectID" value="<%= t.Funnel.ProjectID %>"/>
+          </div>
+
+          <div class="form-group">
+            <label for="name">Steps</label>
+            <% for i, step := range t.Funnel.Steps { %>
+              <input type="text" class="form-control" id="step[<%=i%>].condition" name="step[<%=i%>].condition" value="<%= step.Condition %>"/>
+
+              <% if i == len(t.Funnel.Steps) - 1 { %>
+                <button class="btn btn-link">Add another step</button>
+              <% } %>
+            <% } %>
+          </div>
+
+          <% if t.Funnel.ID() == 0 { %>
+            <button type="submit" class="btn btn-primary">Create Funnel</button>
+          <% } else { %>
+            <button type="submit" class="btn btn-primary">Save Funnel</button>
+          <% } %>
+          <button class="btn btn-link" onclick="window.history.back(); return false">Cancel</button>
+        </form>
+      </div>
+    </div> <!-- /container -->
+  </body>
+</html>
+

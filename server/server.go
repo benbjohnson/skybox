@@ -35,6 +35,7 @@ func (s *Server) ListenAndServe() error {
 	(&homeHandler{handler{server: s}}).install()
 	(&trackHandler{handler{server: s}}).install()
 	(&projectsHandler{handler{server: s}}).install()
+	(&funnelsHandler{handler{server: s}}).install()
 
 	// Start listening on the socket.
 	listener, err := net.Listen("tcp", s.Addr)

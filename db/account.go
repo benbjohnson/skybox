@@ -181,6 +181,19 @@ func (a *Account) Projects() (Projects, error) {
 	return projects, nil
 }
 
+// Funnel retrieves a funnel with a given ID.
+// Only funels associated with projects in this account will be returned.
+func (a *Account) Funnel(id int) (*Funnel, error) {
+	assert(a.id > 0, "find funnel on unsaved account: %d", a.id)
+	f, err := a.Tx.Funnel(id)
+	if err != nil {
+		return nil, err
+	} else if _, err := a.Project(f.ProjectID); err != nil {
+		return nil, ErrFunnelNotFound
+	}
+	return f, nil
+}
+
 type Accounts []*Account
 
 func (s Accounts) Len() int           { return len(s) }

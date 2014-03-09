@@ -10,6 +10,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/benbjohnson/skybox/db"
 	"github.com/benbjohnson/skybox/server"
@@ -44,7 +45,7 @@ func main() {
 	}
 
 	// Seed the PRNG for API key generation.
-	rand.Seed(time.Unix64())
+	rand.Seed(time.Now().Unix())
 
 	// Initialize db.
 	var db db.DB
