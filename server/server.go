@@ -32,6 +32,7 @@ func (s *Server) ListenAndServe() error {
 	s.Router = mux.NewRouter()
 	s.Handler = s.Router
 	s.HandleFunc("/assets/{filename}", s.assetHandler).Methods("GET")
+	s.HandleFunc("/skybox.js", s.skyboxjsHandler).Methods("GET")
 	(&homeHandler{handler{server: s}}).install()
 	(&trackHandler{handler{server: s}}).install()
 	(&accountHandler{handler{server: s}}).install()
@@ -68,5 +69,12 @@ func (s *Server) assetHandler(w http.ResponseWriter, r *http.Request) {
 	case ".js":
 		w.Header().Set("Content-Type", "application/javascript")
 	}
+	w.Write(b)
+}
+
+// skyboxjsHandler retrieves the skybox.js static file.
+func (s *Server) skyboxjsHandler(w http.ResponseWriter, r *http.Request) {
+	b, _ := Asset("skybox.js")
+	w.Header().Set("Content-Type", "application/javascript")
 	w.Write(b)
 }

@@ -12,6 +12,7 @@ type trackHandler struct {
 }
 
 func (h *trackHandler) install() {
+	h.server.Handle("/skybox.js", http.HandlerFunc(h.track)).Methods("GET")
 	h.server.Handle("/track.png", h.transact(http.HandlerFunc(h.track))).Methods("GET")
 }
 

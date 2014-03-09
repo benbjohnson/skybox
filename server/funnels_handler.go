@@ -21,7 +21,6 @@ func newFunnelsHandler(s *Server) *funnelsHandler {
 func (h *funnelsHandler) install() {
 	h.server.Handle("/funnels", h.transact(h.authorize(http.HandlerFunc(h.index)))).Methods("GET")
 	h.server.Handle("/funnels/{id}", h.transact(h.authorize(http.HandlerFunc(h.show)))).Methods("GET")
-	h.server.Handle("/funnels/new", h.transact(h.authorize(http.HandlerFunc(h.edit)))).Methods("GET")
 	h.server.Handle("/funnels/{id}/edit", h.transact(h.authorize(http.HandlerFunc(h.edit)))).Methods("GET")
 	h.server.Handle("/funnels/{id}", h.rwtransact(h.authorize(http.HandlerFunc(h.save)))).Methods("POST")
 }
@@ -65,7 +64,7 @@ func (h *funnelsHandler) edit(w http.ResponseWriter, r *http.Request) {
 	user, account := h.auth(r)
 
 	var f *db.Funnel
-	if vars["id"] == "new" {
+	if vars["id"] == "0" {
 		f = &db.Funnel{
 			Steps: []*db.FunnelStep{{}},
 		}

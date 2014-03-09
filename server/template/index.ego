@@ -4,8 +4,16 @@
 import (
 	"fmt"
 	"io"
+  "os"
 )
 %%>
+
+<%
+hostname, _ := os.Hostname()
+if hostname == "" {
+  hostname = "HOSTNAME";
+}
+%>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -17,10 +25,23 @@ import (
 
       <!-- Main component for a primary marketing message or call to action -->
       <div class="jumbotron">
-        <h1>Navbar example</h1>
-        <p>This example is a quick exercise to illustrate how the default, static navbar and fixed to top navbar work. It includes the responsive CSS and HTML, so it also adapts to your viewport and device.</p>
+        <h1>Welcome to Skybox</h1>
         <p>
-          <a class="btn btn-lg btn-primary" href="../../components/#navbar" role="button">View navbar docs &raquo;</a>
+          Skybox is a tool for tracking user events and querying them through funnel analysis.
+          Funnel analysis is a way to see how users in your application move through multi-step tasks (such as signing up or purchasing).
+        </p>
+
+        <p>
+          To add event tracking to your application, simple copy the following HTML snippet and paste it into your code:
+        </p>
+
+        <pre>
+&lt;script type="text/javascript" src="//<%= hostname %>/skybox.js" async
+  data-api-key="<%= t.Account.APIKey %>"&gt;
+&lt;/script&gt;
+        </pre>
+        <p>
+          <a class="btn btn-lg btn-primary" href="https://github.com/skybox/skybox" target="_blank" role="button">Find us on Github &raquo;</a>
         </p>
       </div>
 

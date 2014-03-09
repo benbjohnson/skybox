@@ -1013,24 +1013,27 @@ else if (typeof window == 'undefined' || window.ActiveXObject || !window.postMes
 }
 
 });
-require.register("track.js/lib/index.js", function(exports, require, module){
+require.register("skybox/lib/index.js", function(exports, require, module){
 
 "use strict";
 /*jslint browser: true, nomen: true*/
 
-var Track = require('./track'),
-    bind  = require('bind');
+var Skybox = require('./skybox'),
+    bind  = require('bind'),
+    skybox = new Skybox();
 
-module.exports = new Track();
+skybox.autoinitialize();
+
+module.exports = skybox;
 
 bind(module.exports, module.exports.init);
 bind(module.exports, module.exports.initialize);
 
 });
-require.register("track.js/lib/track.js", function(exports, require, module){
+require.register("skybox/lib/skybox.js", function(exports, require, module){
 
 "use strict";
-/*jslint browser: true, nomen: true*/
+/*jslint browser: true, nomen: true, regexp: true*/
 
 var Cookie      = require('./cookie'),
     Device      = require('./device'),
@@ -1039,12 +1042,14 @@ var Cookie      = require('./cookie'),
     extend      = require('extend'),
     isEmpty     = require('is-empty'),
     querystring = require('querystring'),
-    type        = require('type');
+    type        = require('type'),
+    DEFAULTHOST = null,
+    DEFAULTPORT = 80;
 
-function Track() {
+function Skybox() {
     this.apiKey = null;
-    this.host = null;
-    this.port = 80;
+    this.host = DEFAULTHOST;
+    this.port = DEFAULTPORT;
     this.cookie = new Cookie();
     this.device = new Device();
     this.user = new User();
@@ -1054,19 +1059,51 @@ function Track() {
     });
 }
 
-Track.prototype.initialize = function (apiKey, options) {
+Skybox.prototype.initialize = function (apiKey, options) {
     var self = this;
     this.apiKey = apiKey;
     this.options(options);
     this.initialized = true;
 };
 
-Track.prototype.init = Track.prototype.inititialize;
+Skybox.prototype.init = Skybox.prototype.inititialize;
+
+/**
+ * Attempts to automatically initialize based on data attributes in the script tag:
+ * 
+ * <script data-api-key="XXX-XXXX"/>
+ */
+Skybox.prototype.autoinitialize = function () {
+    var arr, re, script = this.scriptElement();
+    if (script === null) {
+        return;
+    }
+
+    // Extract API key.
+    if (this.apiKey === null && script.getAttribute("data-api-key") !== null) {
+        this.initialize(script.getAttribute("data-api-key"));
+    }
+
+    // Extract host and port of script.
+    if (this.host === null) {
+        re = /^(?:https?:)?\/\/([^\/]+).*/;
+        if (script.src.search(re) === 0) {
+            arr = script.src.replace(re, "$1").split(":");
+            this.host = arr[0];
+            if (arr.length > 1 && !isNaN(parseInt(arr[1], 10))) {
+                this.port = parseInt(arr[1], 10);
+            }
+        }
+    }
+
+    // Automatically track the page.
+    this.page();
+};
 
 /**
  * Sets or retrieves the current options.
  */
-Track.prototype.options = function (value) {
+Skybox.prototype.options = function (value) {
     if (arguments.length === 0) {
         return this._options;
     }
@@ -1080,7 +1117,7 @@ Track.prototype.options = function (value) {
 /**
  * Identify a user by `id`.
  */
-Track.prototype.identify = function (id) {
+Skybox.prototype.identify = function (id) {
     this.user.identify(id);
     return this;
 };
@@ -1088,7 +1125,7 @@ Track.prototype.identify = function (id) {
 /**
  * Track an event that a user has triggered.
  */
-Track.prototype.track = function (action) {
+Skybox.prototype.track = function (action) {
     var url, q, el, self = this,
         attr = this._options.mode === "test" ? "title" : "src",
         event = {
@@ -1134,7 +1171,7 @@ Track.prototype.track = function (action) {
  * Tracks a page view. This is called automatically after initialization
  * but is useful to call for single-page apps.
  */
-Track.prototype.page = function (name) {
+Skybox.prototype.page = function (name) {
     return this.track("view");
 };
 
@@ -1142,7 +1179,7 @@ Track.prototype.page = function (name) {
  * Sets or retrieves the current resource. If set to a function then the
  * resource will be the result of the function.
  */
-Track.prototype.resource = function (value) {
+Skybox.prototype.resource = function (value) {
     if (arguments.length === 0) {
         return this._resource();
     }
@@ -1153,21 +1190,21 @@ Track.prototype.resource = function (value) {
 /**
  * Retrieves the current domain of the page.
  */
-Track.prototype.domain = function () {
+Skybox.prototype.domain = function () {
     return window.location.host.replace(/:80$/, "");
 };
 
 /**
  * Retrieves the current path of the page.
  */
-Track.prototype.path = function () {
+Skybox.prototype.path = function () {
     return window.location.pathname.replace(/\/+$/, "");
 };
 
 /**
  * Returns a URL with the appropriate host, port, path and query string.
  */
-Track.prototype.url = function (path, q) {
+Skybox.prototype.url = function (path, q) {
     var i, key, params = {},
         str = "";
 
@@ -1202,19 +1239,32 @@ Track.prototype.url = function (path, q) {
     return str;
 };
 
-Track.prototype.log = function (msg) {
+/**
+ * Retrieves a reference to the first script element that loaded "skybox.js".
+ */
+Skybox.prototype.scriptElement = function () {
+    var i, scripts = document.getElementsByTagName("script");
+    for (i = 0; i < scripts.length; i += 1) {
+        if (scripts[i].src.search(/\/skybox.js(?!\/)/) !== -1) {
+            return scripts[i];
+        }
+    }
+    return null;
+};
+
+Skybox.prototype.log = function (msg) {
     if (window.console) {
-        window.console.log("[track.js]: " + msg);
+        window.console.log("[skybox.js]: " + msg);
     }
 };
 
-module.exports = Track;
+module.exports = Skybox;
 
-Track.VERSION = Track.prototype.VERSION = '0.1.0';
+Skybox.VERSION = Skybox.prototype.VERSION = '0.1.0';
 
 
 });
-require.register("track.js/lib/device.js", function(exports, require, module){
+require.register("skybox/lib/device.js", function(exports, require, module){
 
 "use strict";
 /*jslint browser: true, nomen: true*/
@@ -1282,7 +1332,7 @@ module.exports = Device;
 
 
 });
-require.register("track.js/lib/cookie.js", function(exports, require, module){
+require.register("skybox/lib/cookie.js", function(exports, require, module){
 
 "use strict";
 /*jslint browser: true, nomen: true*/
@@ -1366,7 +1416,7 @@ Cookie.prototype.remove = function (key) {
 module.exports = Cookie;
 
 });
-require.register("track.js/lib/user.js", function(exports, require, module){
+require.register("skybox/lib/user.js", function(exports, require, module){
 
 "use strict";
 /*jslint browser: true, nomen: true*/
@@ -1451,52 +1501,52 @@ module.exports = User;
 
 
 
-require.alias("avetisk-defaults/index.js", "track.js/deps/defaults/index.js");
+require.alias("avetisk-defaults/index.js", "skybox/deps/defaults/index.js");
 require.alias("avetisk-defaults/index.js", "defaults/index.js");
 
-require.alias("component-bind/index.js", "track.js/deps/bind/index.js");
+require.alias("component-bind/index.js", "skybox/deps/bind/index.js");
 require.alias("component-bind/index.js", "bind/index.js");
 
-require.alias("component-clone/index.js", "track.js/deps/clone/index.js");
+require.alias("component-clone/index.js", "skybox/deps/clone/index.js");
 require.alias("component-clone/index.js", "clone/index.js");
 require.alias("component-type/index.js", "component-clone/deps/type/index.js");
 
-require.alias("component-cookie/index.js", "track.js/deps/cookie/index.js");
+require.alias("component-cookie/index.js", "skybox/deps/cookie/index.js");
 require.alias("component-cookie/index.js", "cookie/index.js");
 
-require.alias("component-each/index.js", "track.js/deps/each/index.js");
+require.alias("component-each/index.js", "skybox/deps/each/index.js");
 require.alias("component-each/index.js", "each/index.js");
 require.alias("component-to-function/index.js", "component-each/deps/to-function/index.js");
 require.alias("component-props/index.js", "component-to-function/deps/props/index.js");
 
 require.alias("component-type/index.js", "component-each/deps/type/index.js");
 
-require.alias("component-querystring/index.js", "track.js/deps/querystring/index.js");
+require.alias("component-querystring/index.js", "skybox/deps/querystring/index.js");
 require.alias("component-querystring/index.js", "querystring/index.js");
 require.alias("component-trim/index.js", "component-querystring/deps/trim/index.js");
 
-require.alias("component-type/index.js", "track.js/deps/type/index.js");
+require.alias("component-type/index.js", "skybox/deps/type/index.js");
 require.alias("component-type/index.js", "type/index.js");
 
-require.alias("ianstormtaylor-is-empty/index.js", "track.js/deps/is-empty/index.js");
+require.alias("ianstormtaylor-is-empty/index.js", "skybox/deps/is-empty/index.js");
 require.alias("ianstormtaylor-is-empty/index.js", "is-empty/index.js");
 
-require.alias("segmentio-extend/index.js", "track.js/deps/extend/index.js");
+require.alias("segmentio-extend/index.js", "skybox/deps/extend/index.js");
 require.alias("segmentio-extend/index.js", "extend/index.js");
 
-require.alias("segmentio-top-domain/index.js", "track.js/deps/top-domain/index.js");
-require.alias("segmentio-top-domain/index.js", "track.js/deps/top-domain/index.js");
+require.alias("segmentio-top-domain/index.js", "skybox/deps/top-domain/index.js");
+require.alias("segmentio-top-domain/index.js", "skybox/deps/top-domain/index.js");
 require.alias("segmentio-top-domain/index.js", "top-domain/index.js");
 require.alias("component-url/index.js", "segmentio-top-domain/deps/url/index.js");
 
 require.alias("segmentio-top-domain/index.js", "segmentio-top-domain/index.js");
-require.alias("timoxley-next-tick/index.js", "track.js/deps/next-tick/index.js");
+require.alias("timoxley-next-tick/index.js", "skybox/deps/next-tick/index.js");
 require.alias("timoxley-next-tick/index.js", "next-tick/index.js");
 
-require.alias("track.js/lib/index.js", "track.js/index.js");if (typeof exports == "object") {
-  module.exports = require("track.js");
+require.alias("skybox/lib/index.js", "skybox/index.js");if (typeof exports == "object") {
+  module.exports = require("skybox");
 } else if (typeof define == "function" && define.amd) {
-  define(function(){ return require("track.js"); });
+  define(function(){ return require("skybox"); });
 } else {
-  this["track"] = require("track.js");
+  this["skybox"] = require("skybox");
 }})();

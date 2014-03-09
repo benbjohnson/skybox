@@ -15,7 +15,7 @@
         <h3>
           Funnels
           <div class="pull-right">
-            <a href="/funnels/new" class="btn btn-success">New Funnel</a>
+            <a href="/funnels/0/edit" class="btn btn-success">New Funnel</a>
           </div>
         </h3>
       </div>

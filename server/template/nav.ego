@@ -21,12 +21,11 @@ import (
     <div class="navbar-collapse collapse">
       <% if t.User != nil { %>
         <ul class="nav navbar-nav">
-          <li class="active"><a href="/">Dashboard</a></li>
+          <li class="active"><a href="/">Home</a></li>
           <li><a href="/funnels">Funnels</a></li>
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
-          <li><a href="/account">Account</a></li>
           <li><a href="/logout">Log out</a></li>
         </ul>
       <% } else { %>

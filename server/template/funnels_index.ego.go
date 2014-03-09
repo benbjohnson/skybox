@@ -61,7 +61,7 @@ func (t *FunnelsTemplate) Index(w io.Writer) error {
 		return err
 	}
 //line funnels_index.ego:18
-	if _, err := fmt.Fprintf(w, "<a href=\"/funnels/new\" class=\"btn btn-success\">New Funnel"); err != nil {
+	if _, err := fmt.Fprintf(w, "<a href=\"/funnels/0/edit\" class=\"btn btn-success\">New Funnel"); err != nil {
 		return err
 	}
 //line funnels_index.ego:18
