@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -17,8 +16,10 @@ import (
 )
 
 var (
-	path = flag.String("path", "", "data directory")
-	port = flag.Int("port", 7000, "http port")
+	dataDir  = flag.String("data-dir", "", "data directory")
+	port     = flag.Int("port", 7000, "http port")
+	certFile = flag.String("cert-file", "", "SSL certificate file")
+	keyFile  = flag.String("key-file", "", "SSL key file")
 )
 
 func usage() {
@@ -32,15 +33,17 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	// Initialize path.
-	if *path == "" {
-		u, err := user.Current()
-		if err != nil {
-			log.Fatal(err)
-		}
-		*path = filepath.Join(u.HomeDir, ".skybox")
+	// Validate arguments.
+	if *dataDir == "" {
+		log.Fatal("data directory required: --data-dir")
+	} else if *certFile != "" && *keyFile == "" {
+		log.Fatal("key file required: --key-file")
+	} else if *keyFile != "" && *certFile == "" {
+		log.Fatal("certificate file required: --cert-file")
 	}
-	if err := os.MkdirAll(*path, 0700); err != nil {
+
+	// Initialize data directory.
+	if err := os.MkdirAll(*dataDir, 0700); err != nil {
 		log.Fatal(err)
 	}
 
@@ -49,7 +52,7 @@ func main() {
 
 	// Initialize db.
 	var db db.DB
-	if err := db.Open(filepath.Join(*path, "db"), 0666); err != nil {
+	if err := db.Open(filepath.Join(*dataDir, "db"), 0666); err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
