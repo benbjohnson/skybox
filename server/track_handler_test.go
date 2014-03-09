@@ -18,7 +18,7 @@ func TestServerTrackAnonymous(t *testing.T) {
 		assert.NotNil(t, body)
 
 		// Check that Sky recorded it.
-		events, err := p.SkyTable().Events("@device0")
+		events, err := p.SkyTable().Events("device0")
 		assert.NoError(t, err)
 		if assert.Equal(t, len(events), 1) {
 			assert.True(t, time.Now().Sub(events[0].Timestamp) < time.Second)
@@ -40,7 +40,7 @@ func TestServerTrackKnownUser(t *testing.T) {
 		assert.NotNil(t, body)
 
 		// Check that Sky recorded it.
-		events, err := p.SkyTable().Events("user0")
+		events, err := p.SkyTable().Events("@user0")
 		assert.NoError(t, err)
 		if assert.Equal(t, len(events), 1) {
 			assert.True(t, time.Now().Sub(events[0].Timestamp) < time.Second)

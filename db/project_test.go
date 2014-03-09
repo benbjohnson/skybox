@@ -226,7 +226,7 @@ func TestProjectTrack(t *testing.T) {
 			assert.NoError(t, err)
 
 			// Verify "john" events.
-			events, err := p.Events("john")
+			events, err := p.Events("@john")
 			assert.NoError(t, err)
 			if assert.Equal(t, len(events), 2) {
 				assert.Equal(t, events[0].Timestamp, mustParseTime("2000-01-01T00:00:00Z"))
@@ -241,7 +241,7 @@ func TestProjectTrack(t *testing.T) {
 			}
 
 			// Verify "susy" events.
-			events, err = p.Events("susy")
+			events, err = p.Events("@susy")
 			assert.NoError(t, err)
 			if assert.Equal(t, len(events), 1) {
 				assert.Equal(t, events[0].Timestamp, mustParseTime("2000-01-01T00:00:00Z"))

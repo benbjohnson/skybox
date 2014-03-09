@@ -194,7 +194,7 @@ func (p *Project) Track(e *Event) error {
 	}
 
 	// TODO(benbjohnson): Merge timelines if necessary.
-	// t.Merge(id, t.AnonymousID())
+	// t.Merge(id, t.DeviceID
 
 	return nil
 }

@@ -1,13 +1,12 @@
 package db
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/skydb/gosky"
 )
 
-const AnonymousPrefix = "@"
+const UserPrefix = "@"
 
 // Event represents an action or state change trigger by a tracked user.
 type Event struct {
@@ -23,17 +22,9 @@ type Event struct {
 // ID returns the identifier used to store the event in Sky.
 func (e *Event) ID() string {
 	if e.UserID != "" {
-		return e.UserID
+		return UserPrefix + e.UserID
 	}
-	return e.AnonymousID()
-}
-
-// AnonymousID returns the identifier used when the ID is not available.
-func (e *Event) AnonymousID() string {
-	if e.DeviceID == "" {
-		return ""
-	}
-	return fmt.Sprintf("%s%s", AnonymousPrefix, e.DeviceID)
+	return e.DeviceID
 }
 
 // IsAnonymous returns whether the event is for an unidentified user.
@@ -65,12 +56,12 @@ func (e *Event) Deserialize(id string, event *sky.Event) {
 
 	// Parse the user or device id from the Sky identifier.
 	if id != "" {
-		if id[0] == AnonymousPrefix[0] {
-			e.UserID = ""
-			e.DeviceID = id[1:]
-		} else {
-			e.UserID = id
+		if id[0] == UserPrefix[0] {
+			e.UserID = id[1:]
 			e.DeviceID = ""
+		} else {
+			e.UserID = ""
+			e.DeviceID = id
 		}
 	}
 
