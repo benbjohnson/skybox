@@ -41,9 +41,39 @@ func withServer(fn func(*Server)) {
 	s.Addr = testAddr
 	s.DB = &db
 
-	go s.ListenAndServe()
-	defer s.Close()
+	c := make(chan bool)
+	go func() {
+		c <- true
+		s.ListenAndServe()
+	}()
+	<-c
 
 	// Execute function.
 	fn(&s)
+
+	s.Close()
+}
+
+// withServerAndProject executes a function with an open server and created project.
+func withServerAndProject(fn func(*Server, *db.Project)) {
+	withServer(func(s *Server) {
+		p := &db.Project{Name: "My Project"}
+		err := s.DB.Do(func(tx *db.Tx) error {
+			a := &db.Account{}
+			if err := tx.CreateAccount(a); err != nil {
+				panic("create account error: " + err.Error())
+			}
+			if err := a.CreateProject(p); err != nil {
+				panic("create project error: " + err.Error())
+			}
+			if err := p.Reset(); err != nil {
+				panic("reset project error: " + err.Error())
+			}
+			return nil
+		})
+		if err != nil {
+			panic("init error: " + err.Error())
+		}
+		fn(s, p)
+	})
 }
