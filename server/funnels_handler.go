@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/benbjohnson/skybox/db"
-	"github.com/benbjohnson/skybox/server/template"
 	"github.com/gorilla/mux"
+	"github.com/skybox/skybox/db"
+	"github.com/skybox/skybox/server/template"
 )
 
 type funnelsHandler struct {

@@ -1,8 +1,8 @@
 package template
 
 import (
-	"github.com/benbjohnson/skybox/db"
 	"github.com/gorilla/sessions"
+	"github.com/skybox/skybox/db"
 )
 
 type Template struct {

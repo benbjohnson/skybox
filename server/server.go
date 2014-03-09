@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/benbjohnson/skybox/db"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/skybox/skybox/db"
 )
 
 // Server represents an HTTP interface to the database.

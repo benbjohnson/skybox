@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/benbjohnson/skybox/server/template"
+	"github.com/skybox/skybox/server/template"
 )
 
 type accountHandler struct {

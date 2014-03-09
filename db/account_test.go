@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/benbjohnson/skybox/db"
+	. "github.com/skybox/skybox/db"
 	"github.com/stretchr/testify/assert"
 )
 

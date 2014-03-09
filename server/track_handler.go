@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/benbjohnson/skybox/db"
+	"github.com/skybox/skybox/db"
 )
 
 type trackHandler struct {

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/benbjohnson/skybox/db"
-	"github.com/benbjohnson/skybox/server/template"
 	"github.com/gorilla/sessions"
+	"github.com/skybox/skybox/db"
+	"github.com/skybox/skybox/server/template"
 )
 
 type handler struct {

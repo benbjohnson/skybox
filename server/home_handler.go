@@ -3,8 +3,8 @@ package server
 import (
 	"net/http"
 
-	"github.com/benbjohnson/skybox/db"
-	"github.com/benbjohnson/skybox/server/template"
+	"github.com/skybox/skybox/db"
+	"github.com/skybox/skybox/server/template"
 )
 
 type homeHandler struct {

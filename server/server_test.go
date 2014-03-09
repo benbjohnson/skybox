@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/benbjohnson/skybox/db"
-	. "github.com/benbjohnson/skybox/server"
+	"github.com/skybox/skybox/db"
+	. "github.com/skybox/skybox/server"
 	"github.com/stretchr/testify/assert"
 )
 
