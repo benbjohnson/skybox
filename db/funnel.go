@@ -21,11 +21,11 @@ var (
 )
 
 // Funnel represents a multi-step query.
-// A Funnel belongs to a Project.
+// A Funnel belongs to an Account.
 type Funnel struct {
 	Tx        *Tx
 	id        int
-	ProjectID int           `json:"projectID"`
+	AccountID int           `json:"accountID"`
 	Name      string        `json:"name"`
 	Steps     []*FunnelStep `json:"steps"`
 }
@@ -76,12 +76,12 @@ func (f *Funnel) Save() error {
 
 // Delete removes the Funnel from the database.
 func (f *Funnel) Delete() error {
-	// Remove project entry.
+	// Remove account entry.
 	err := f.Tx.Bucket("funnels").Delete(itob(f.id))
 	assert(err == nil, "funnel delete error: %s", err)
 
 	// Remove funnel id from indices.
-	removeFromForeignKeyIndex(f.Tx, "project.funnels", itob(f.ProjectID), f.id)
+	removeFromForeignKeyIndex(f.Tx, "account.funnels", itob(f.AccountID), f.id)
 
 	return nil
 }
@@ -92,7 +92,7 @@ func (f *Funnel) Query() (*FunnelResult, error) {
 	querystring := f.QueryString()
 
 	// Retrieve Sky table.
-	p := &Project{id: f.ProjectID, Tx: f.Tx}
+	p := &Account{id: f.AccountID, Tx: f.Tx}
 	t := p.SkyTable()
 
 	// Execute query against Sky.

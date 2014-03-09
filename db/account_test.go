@@ -2,6 +2,7 @@ package db_test
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/benbjohnson/skybox/db"
 	"github.com/stretchr/testify/assert"
@@ -92,63 +93,160 @@ func TestAccountUsers(t *testing.T) {
 	})
 }
 
-// Ensure that an account can retrieve all associated projects.
-func TestAccountProjects(t *testing.T) {
+// Ensure that an account can generate a random API key.
+func TestAccountGenerateAPIKey(t *testing.T) {
 	withDB(func(db *DB) {
-		// Create two accounts.
+		db.Do(func(tx *Tx) error {
+			a := &Account{}
+			assert.NoError(t, tx.CreateAccount(a))
+
+			// Check for an API key.
+			assert.Equal(t, len(a.APIKey), 36)
+
+			// Lookup account by API key.
+			a2, err := tx.AccountByAPIKey(a.APIKey)
+			assert.NoError(t, err)
+			assert.Equal(t, a2.ID(), 1)
+
+			// Regenerate key.
+			apiKey := a.APIKey
+			assert.NoError(t, a.GenerateAPIKey())
+
+			// Make sure it's not the same as before.
+			assert.NotEqual(t, a.APIKey, apiKey)
+
+			// Make sure we can lookup by the new key and not the old.
+			a3, err := tx.AccountByAPIKey(a.APIKey)
+			assert.NoError(t, err)
+			assert.Equal(t, a3.ID(), 1)
+
+			a4, err := tx.AccountByAPIKey(apiKey)
+			assert.Equal(t, err, ErrAccountNotFound)
+			assert.Nil(t, a4)
+
+			return nil
+		})
+	})
+}
+
+// Ensure that an account can retrieve all associated funnels.
+func TestAccountFunnels(t *testing.T) {
+	withDB(func(db *DB) {
 		db.Do(func(tx *Tx) error {
 			a1 := &Account{}
-			assert.NoError(t, tx.CreateAccount(a1))
 			a2 := &Account{}
+			assert.NoError(t, tx.CreateAccount(a1))
 			assert.NoError(t, tx.CreateAccount(a2))
 
-			// Add projects to first account.
-			assert.NoError(t, a1.CreateProject(&Project{Name: "Project Y"}))
-			assert.NoError(t, a1.CreateProject(&Project{Name: "Project X"}))
+			// Add funnels to first account.
+			assert.NoError(t, a1.CreateFunnel(&Funnel{Name: "Funnel B", Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}))
+			assert.NoError(t, a1.CreateFunnel(&Funnel{Name: "Funnel A", Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}))
 
-			// Add projects to second account.
-			assert.NoError(t, a2.CreateProject(&Project{Name: "Project A"}))
+			// Add funnels to second account.
+			assert.NoError(t, a2.CreateFunnel(&Funnel{Name: "Funnel C", Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}))
 			return nil
 		})
 
-		// Check first account projects.
+		// Check first account.
 		db.With(func(tx *Tx) error {
-			a1, _ := tx.Account(1)
-			projects, err := a1.Projects()
-			if assert.NoError(t, err) && assert.Equal(t, len(projects), 2) {
-				assert.Equal(t, projects[0].Tx, tx)
-				assert.Equal(t, projects[0].ID(), 2)
-				assert.Equal(t, projects[0].AccountID, 1)
-				assert.Equal(t, projects[0].Name, "Project X")
+			a, _ := tx.Account(1)
+			funnels, err := a.Funnels()
+			if assert.NoError(t, err) && assert.Equal(t, len(funnels), 2) {
+				assert.Equal(t, funnels[0].Tx, tx)
+				assert.Equal(t, funnels[0].ID(), 2)
+				assert.Equal(t, funnels[0].AccountID, 1)
+				assert.Equal(t, funnels[0].Name, "Funnel A")
 
-				assert.Equal(t, projects[1].Tx, tx)
-				assert.Equal(t, projects[1].ID(), 1)
-				assert.Equal(t, projects[1].AccountID, 1)
-				assert.Equal(t, projects[1].Name, "Project Y")
+				assert.Equal(t, funnels[1].Tx, tx)
+				assert.Equal(t, funnels[1].ID(), 1)
+				assert.Equal(t, funnels[1].AccountID, 1)
+				assert.Equal(t, funnels[1].Name, "Funnel B")
 			}
 
-			// Make sure we can only get a1 projects.
-			p, err := a1.Project(1)
+			// Make sure we can only get a1 funnels.
+			f, err := a.Funnel(1)
 			assert.NoError(t, err)
-			assert.NotNil(t, p)
-			p, err = a1.Project(3)
-			assert.Equal(t, err, ErrProjectNotFound)
-			assert.Nil(t, p)
+			assert.NotNil(t, f)
+			f, err = a.Funnel(3)
+			assert.Equal(t, err, ErrFunnelNotFound)
+			assert.Nil(t, f)
 
 			return nil
 		})
 
-		// Check second account projects.
+		// Check second account's funnels.
 		db.With(func(tx *Tx) error {
-			a2, _ := tx.Account(2)
-			projects, err := a2.Projects()
-			if assert.NoError(t, err) && assert.Equal(t, len(projects), 1) {
-				assert.Equal(t, projects[0].Tx, tx)
-				assert.Equal(t, projects[0].ID(), 3)
-				assert.Equal(t, projects[0].AccountID, 2)
-				assert.Equal(t, projects[0].Name, "Project A")
+			a, _ := tx.Account(2)
+			funnels, err := a.Funnels()
+			if assert.NoError(t, err) && assert.Equal(t, len(funnels), 1) {
+				assert.Equal(t, funnels[0].Tx, tx)
+				assert.Equal(t, funnels[0].ID(), 3)
+				assert.Equal(t, funnels[0].AccountID, 2)
+				assert.Equal(t, funnels[0].Name, "Funnel C")
 			}
 			return nil
 		})
 	})
+}
+
+// Ensure that an account can track events and insert them into Sky.
+func TestAccountTrack(t *testing.T) {
+	withDB(func(db *DB) {
+		db.Do(func(tx *Tx) error {
+			a := &Account{}
+			tx.CreateAccount(a)
+			a.Reset()
+
+			// Add some events.
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:00:00Z", "john", "DEV0", "web", "/", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:00:05Z", "john", "DEV1", "web", "/signup", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:00:00Z", "susy", "DEV2", "web", "/cancel", "click", nil)))
+
+			// Verify "john" events.
+			events, err := a.Events("@john")
+			assert.NoError(t, err)
+			if assert.Equal(t, len(events), 2) {
+				assert.Equal(t, events[0].Timestamp, mustParseTime("2000-01-01T00:00:00Z"))
+				assert.Equal(t, events[0].Channel, "web")
+				assert.Equal(t, events[0].Resource, "/")
+				assert.Equal(t, events[0].Action, "view")
+
+				assert.Equal(t, events[1].Timestamp, mustParseTime("2000-01-01T00:00:05Z"))
+				assert.Equal(t, events[1].Channel, "web")
+				assert.Equal(t, events[1].Resource, "/signup")
+				assert.Equal(t, events[1].Action, "view")
+			}
+
+			// Verify "susy" events.
+			events, err = a.Events("@susy")
+			assert.NoError(t, err)
+			if assert.Equal(t, len(events), 1) {
+				assert.Equal(t, events[0].Timestamp, mustParseTime("2000-01-01T00:00:00Z"))
+				assert.Equal(t, events[0].Channel, "web")
+				assert.Equal(t, events[0].Resource, "/cancel")
+				assert.Equal(t, events[0].Action, "click")
+			}
+			return nil
+		})
+	})
+}
+
+func newTestEvent(timestamp, userID, deviceID, channel, resource, action string, data map[string]interface{}) *Event {
+	return &Event{
+		Timestamp: mustParseTime(timestamp),
+		UserID:    userID,
+		DeviceID:  deviceID,
+		Channel:   channel,
+		Resource:  resource,
+		Action:    action,
+		Data:      data,
+	}
+}
+
+func mustParseTime(timestamp string) time.Time {
+	ts, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		panic("invalid timestamp: " + err.Error())
+	}
+	return ts.UTC()
 }

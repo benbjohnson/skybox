@@ -23,11 +23,10 @@ import (
         <ul class="nav navbar-nav">
           <li class="active"><a href="/">Dashboard</a></li>
           <li><a href="/funnels">Funnels</a></li>
-          <li><a href="/projects">Projects</a></li>
-          <!-- TODO: <li><a href="/users">Users</a></li> -->
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
+          <li><a href="/account">Account</a></li>
           <li><a href="/logout">Log out</a></li>
         </ul>
       <% } else { %>

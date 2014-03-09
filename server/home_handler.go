@@ -88,14 +88,6 @@ func (h *homeHandler) doSignup(w http.ResponseWriter, r *http.Request) {
 		Password: r.FormValue("password"),
 	}
 
-	// Create default project.
-	if err := account.CreateProject(&db.Project{Name: "Default Project"}); err != nil {
-		tx.Rollback()
-		session.AddFlash(err.Error())
-		http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
-		return
-	}
-
 	// Create user.
 	if err := account.CreateUser(user); err != nil {
 		tx.Rollback()

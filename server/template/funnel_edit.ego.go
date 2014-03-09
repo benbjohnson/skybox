@@ -143,7 +143,7 @@ func (t *FunnelTemplate) Edit(w io.Writer) error {
 		return err
 	}
 //line funnel_edit.ego:34
-	if _, err := fmt.Fprintf(w, "<label for=\"name\">Project"); err != nil {
+	if _, err := fmt.Fprintf(w, "<label for=\"name\">Steps"); err != nil {
 		return err
 	}
 //line funnel_edit.ego:34
@@ -151,160 +151,132 @@ func (t *FunnelTemplate) Edit(w io.Writer) error {
 		return err
 	}
 //line funnel_edit.ego:35
-	if _, err := fmt.Fprintf(w, "<input type=\"text\" class=\"form-control\" id=\"projectID\" name=\"projectID\" value=\""); err != nil {
-		return err
-	}
-//line funnel_edit.ego:35
-	if _, err := fmt.Fprintf(w, "%v", t.Funnel.ProjectID); err != nil {
-		return err
-	}
-//line funnel_edit.ego:35
-	if _, err := fmt.Fprintf(w, "\"/>\n          "); err != nil {
-		return err
-	}
-//line funnel_edit.ego:36
-	if _, err := fmt.Fprintf(w, "</div>\n\n          "); err != nil {
-		return err
-	}
-//line funnel_edit.ego:38
-	if _, err := fmt.Fprintf(w, "<div class=\"form-group\">\n            "); err != nil {
-		return err
-	}
-//line funnel_edit.ego:39
-	if _, err := fmt.Fprintf(w, "<label for=\"name\">Steps"); err != nil {
-		return err
-	}
-//line funnel_edit.ego:39
-	if _, err := fmt.Fprintf(w, "</label>\n            "); err != nil {
-		return err
-	}
-//line funnel_edit.ego:40
 	for i, step := range t.Funnel.Steps {
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "\n              "); err != nil {
 			return err
 		}
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "<input type=\"text\" class=\"form-control\" id=\"step["); err != nil {
 			return err
 		}
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "%v", i); err != nil {
 			return err
 		}
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "].condition\" name=\"step["); err != nil {
 			return err
 		}
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "%v", i); err != nil {
 			return err
 		}
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "].condition\" value=\""); err != nil {
 			return err
 		}
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "%v", step.Condition); err != nil {
 			return err
 		}
-//line funnel_edit.ego:41
+//line funnel_edit.ego:36
 		if _, err := fmt.Fprintf(w, "\"/>\n\n              "); err != nil {
 			return err
 		}
-//line funnel_edit.ego:43
+//line funnel_edit.ego:38
 		if i == len(t.Funnel.Steps)-1 {
-//line funnel_edit.ego:44
+//line funnel_edit.ego:39
 			if _, err := fmt.Fprintf(w, "\n                "); err != nil {
 				return err
 			}
-//line funnel_edit.ego:44
+//line funnel_edit.ego:39
 			if _, err := fmt.Fprintf(w, "<button class=\"btn btn-link\">Add another step"); err != nil {
 				return err
 			}
-//line funnel_edit.ego:44
+//line funnel_edit.ego:39
 			if _, err := fmt.Fprintf(w, "</button>\n              "); err != nil {
 				return err
 			}
-//line funnel_edit.ego:45
+//line funnel_edit.ego:40
 		}
-//line funnel_edit.ego:46
+//line funnel_edit.ego:41
 		if _, err := fmt.Fprintf(w, "\n            "); err != nil {
 			return err
 		}
-//line funnel_edit.ego:46
+//line funnel_edit.ego:41
 	}
-//line funnel_edit.ego:47
+//line funnel_edit.ego:42
 	if _, err := fmt.Fprintf(w, "\n          "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:47
+//line funnel_edit.ego:42
 	if _, err := fmt.Fprintf(w, "</div>\n\n          "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:49
+//line funnel_edit.ego:44
 	if t.Funnel.ID() == 0 {
-//line funnel_edit.ego:50
+//line funnel_edit.ego:45
 		if _, err := fmt.Fprintf(w, "\n            "); err != nil {
 			return err
 		}
-//line funnel_edit.ego:50
+//line funnel_edit.ego:45
 		if _, err := fmt.Fprintf(w, "<button type=\"submit\" class=\"btn btn-primary\">Create Funnel"); err != nil {
 			return err
 		}
-//line funnel_edit.ego:50
+//line funnel_edit.ego:45
 		if _, err := fmt.Fprintf(w, "</button>\n          "); err != nil {
 			return err
 		}
-//line funnel_edit.ego:51
+//line funnel_edit.ego:46
 	} else {
-//line funnel_edit.ego:52
+//line funnel_edit.ego:47
 		if _, err := fmt.Fprintf(w, "\n            "); err != nil {
 			return err
 		}
-//line funnel_edit.ego:52
+//line funnel_edit.ego:47
 		if _, err := fmt.Fprintf(w, "<button type=\"submit\" class=\"btn btn-primary\">Save Funnel"); err != nil {
 			return err
 		}
-//line funnel_edit.ego:52
+//line funnel_edit.ego:47
 		if _, err := fmt.Fprintf(w, "</button>\n          "); err != nil {
 			return err
 		}
-//line funnel_edit.ego:53
+//line funnel_edit.ego:48
 	}
-//line funnel_edit.ego:54
+//line funnel_edit.ego:49
 	if _, err := fmt.Fprintf(w, "\n          "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:54
+//line funnel_edit.ego:49
 	if _, err := fmt.Fprintf(w, "<button class=\"btn btn-link\" onclick=\"window.history.back(); return false\">Cancel"); err != nil {
 		return err
 	}
-//line funnel_edit.ego:54
+//line funnel_edit.ego:49
 	if _, err := fmt.Fprintf(w, "</button>\n        "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:55
+//line funnel_edit.ego:50
 	if _, err := fmt.Fprintf(w, "</form>\n      "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:56
+//line funnel_edit.ego:51
 	if _, err := fmt.Fprintf(w, "</div>\n    "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:57
+//line funnel_edit.ego:52
 	if _, err := fmt.Fprintf(w, "</div> "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:57
+//line funnel_edit.ego:52
 	if _, err := fmt.Fprintf(w, "<!-- /container -->\n  "); err != nil {
 		return err
 	}
-//line funnel_edit.ego:58
+//line funnel_edit.ego:53
 	if _, err := fmt.Fprintf(w, "</body>\n"); err != nil {
 		return err
 	}
-//line funnel_edit.ego:59
+//line funnel_edit.ego:54
 	if _, err := fmt.Fprintf(w, "</html>\n\n"); err != nil {
 		return err
 	}

@@ -1,0 +1,33 @@
+<%! func (t *AccountTemplate) Show(w io.Writer) error %>
+
+<%%
+import (
+	"fmt"
+	"io"
+)
+%%>
+
+<!DOCTYPE html>
+<html lang="en">
+  <% t.Head(w, "") %>
+
+  <body id="index">
+    <div class="container">
+      <% t.Nav(w) %>
+
+      <div class="page-header">
+        <h3>My Account</h3>
+      </div>
+
+      <div class="row">
+        <form role="form" class="col-sm-6 col-md-5 col-lg-5">
+          <div class="form-group">
+            <label>API Key</label>
+            <input type="text" class="form-control" value="<%= t.Account.APIKey %>" disabled/>
+          </div>
+        </form>
+      </div>
+    </div> <!-- /container -->
+  </body>
+</html>
+

@@ -15,17 +15,16 @@ func New(s *sessions.Session, u *db.User, a *db.Account) *Template {
 	return &Template{Session: s, User: u, Account: a}
 }
 
-type ProjectTemplate struct {
+type AccountTemplate struct {
 	*Template
-	Project *db.Project
-}
-
-type ProjectsTemplate struct {
-	*Template
-	Projects []*db.Project
 }
 
 type FunnelTemplate struct {
 	*Template
 	Funnel *db.Funnel
+}
+
+type FunnelsTemplate struct {
+	*Template
+	Funnels []*db.Funnel
 }

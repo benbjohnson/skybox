@@ -18,7 +18,15 @@ func newFunnelsHandler(s *Server) *funnelsHandler {
 }
 
 func (h *funnelsHandler) install() {
+	h.server.Handle("/funnels", h.transact(h.authorize(http.HandlerFunc(h.index)))).Methods("GET")
 	h.server.Handle("/funnels/{id}", h.transact(h.authorize(http.HandlerFunc(h.edit)))).Methods("GET")
+}
+
+func (h *funnelsHandler) index(w http.ResponseWriter, r *http.Request) {
+	user, account := h.auth(r)
+	funnels, _ := account.Funnels()
+	t := &template.FunnelsTemplate{template.New(h.session(r), user, account), funnels}
+	t.Index(w)
 }
 
 func (h *funnelsHandler) edit(w http.ResponseWriter, r *http.Request) {

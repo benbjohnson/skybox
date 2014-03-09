@@ -66,28 +66,28 @@ func (t *Tx) CreateAccount(a *Account) error {
 	var err error
 	a.id, err = t.Bucket("accounts").NextSequence()
 	assert(a.id > 0, "account sequence error: %s", err)
-	return a.Save()
+	if err := a.Save(); err != nil {
+		return err
+	}
+
+	// Create Sky table.
+	if err := a.Migrate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// Project retrieves a Project from the database with the given identifier.
-func (t *Tx) Project(id int) (*Project, error) {
-	p := &Project{Tx: t, id: id}
-	if err := p.Load(); err != nil {
+// AccountByAPIKey retrieves an acocunt from the database with the given API key.
+func (t *Tx) AccountByAPIKey(apiKey string) (*Account, error) {
+	a := &Account{Tx: t}
+	if a.id = getUniqueIndex(t, "accounts.APIKey", []byte(apiKey)); a.id == 0 {
+		return nil, ErrAccountNotFound
+	}
+	if err := a.Load(); err != nil {
 		return nil, err
 	}
-	return p, nil
-}
-
-// ProjectByAPIKey retrieves a Project from the database with the given API key.
-func (t *Tx) ProjectByAPIKey(apiKey string) (*Project, error) {
-	p := &Project{Tx: t}
-	if p.id = getUniqueIndex(t, "projects.APIKey", []byte(apiKey)); p.id == 0 {
-		return nil, ErrProjectNotFound
-	}
-	if err := p.Load(); err != nil {
-		return nil, err
-	}
-	return p, nil
+	return a, nil
 }
 
 // Funnel retrieves a Funnel from the database with the given identifier.

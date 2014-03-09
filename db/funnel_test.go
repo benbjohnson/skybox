@@ -8,17 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Ensure that a project can create a funnel.
+// Ensure that an account can create a funnel.
 func TestFunnelCreate(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(tx *Tx) error {
-			// Create an account, project, and funnel.
+			// Create an account and funnel.
 			a := &Account{}
 			assert.NoError(t, tx.CreateAccount(a))
-			p := &Project{Name: "Project X"}
-			assert.NoError(t, a.CreateProject(p))
 			f := &Funnel{Name: "Funnel Y", Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}
-			assert.NoError(t, p.CreateFunnel(f))
+			assert.NoError(t, a.CreateFunnel(f))
 			assert.Equal(t, f.ID(), 1)
 
 			// Retrieve the funnel.
@@ -26,7 +24,7 @@ func TestFunnelCreate(t *testing.T) {
 			if assert.NoError(t, err) && assert.NotNil(t, f2) {
 				assert.Equal(t, f2.Tx, tx)
 				assert.Equal(t, f2.ID(), 1)
-				assert.Equal(t, f2.ProjectID, 1)
+				assert.Equal(t, f2.AccountID, 1)
 				assert.Equal(t, f2.Name, "Funnel Y")
 			}
 			return nil
@@ -40,9 +38,7 @@ func TestFunnelCreateMissingName(t *testing.T) {
 		db.Do(func(tx *Tx) error {
 			a := &Account{}
 			assert.NoError(t, tx.CreateAccount(a))
-			p := &Project{Name: "Project X"}
-			assert.NoError(t, a.CreateProject(p))
-			assert.Equal(t, p.CreateFunnel(&Funnel{Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}), ErrFunnelNameRequired)
+			assert.Equal(t, a.CreateFunnel(&Funnel{Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}), ErrFunnelNameRequired)
 			return nil
 		})
 	})
@@ -54,9 +50,7 @@ func TestFunnelCreateMissingSteps(t *testing.T) {
 		db.Do(func(tx *Tx) error {
 			a := &Account{}
 			assert.NoError(t, tx.CreateAccount(a))
-			p := &Project{Name: "Project X"}
-			assert.NoError(t, a.CreateProject(p))
-			assert.Equal(t, p.CreateFunnel(&Funnel{Name: "Funnel Y"}), ErrFunnelStepsRequired)
+			assert.Equal(t, a.CreateFunnel(&Funnel{Name: "Funnel Y"}), ErrFunnelStepsRequired)
 			return nil
 		})
 	})
@@ -66,19 +60,16 @@ func TestFunnelCreateMissingSteps(t *testing.T) {
 func TestFunnelUpdate(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(tx *Tx) error {
-			// Create account and project.
 			a := &Account{}
 			assert.NoError(t, tx.CreateAccount(a))
-			p := &Project{Name: "Project X"}
-			assert.NoError(t, a.CreateProject(p))
 			f := &Funnel{Name: "Funnel Y", Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}
-			assert.NoError(t, p.CreateFunnel(f))
+			assert.NoError(t, a.CreateFunnel(f))
 
 			// Update the funnel.
 			f.Name = "Funnel Z"
 			f.Save()
 
-			// Retrieve the project.
+			// Retrieve the funnel.
 			f2, err := tx.Funnel(1)
 			if assert.NoError(t, err) && assert.NotNil(t, f2) {
 				assert.Equal(t, f2.Name, "Funnel Z")
@@ -92,13 +83,11 @@ func TestFunnelUpdate(t *testing.T) {
 func TestFunnelDelete(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(tx *Tx) error {
-			// Create account, project, and funnel.
+			// Create account and funnel.
 			a := &Account{}
 			assert.NoError(t, tx.CreateAccount(a))
-			p := &Project{Name: "Project X"}
-			assert.NoError(t, a.CreateProject(p))
-			f := &Funnel{Name: "Project Y", Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}
-			assert.NoError(t, p.CreateFunnel(f))
+			f := &Funnel{Name: "Funnel Y", Steps: []*FunnelStep{{Condition: "action == 'foo'"}}}
+			assert.NoError(t, a.CreateFunnel(f))
 
 			// Delete the funnel.
 			assert.NoError(t, f.Delete())
@@ -145,7 +134,6 @@ func TestFunnelQuery(t *testing.T) {
 	withDB(func(db *DB) {
 		db.Do(func(tx *Tx) error {
 			a := &Account{}
-			p := &Project{Name: "Project X"}
 			f := &Funnel{
 				Name: "FUN",
 				Steps: []*FunnelStep{
@@ -155,23 +143,22 @@ func TestFunnelQuery(t *testing.T) {
 				},
 			}
 			assert.NoError(t, tx.CreateAccount(a))
-			assert.NoError(t, a.CreateProject(p))
-			assert.NoError(t, p.CreateFunnel(f))
-			p.Reset()
+			assert.NoError(t, a.CreateFunnel(f))
+			a.Reset()
 
 			// Track: "john" completes the whole checkout.
-			assert.NoError(t, p.Track(newTestEvent("2000-01-01T00:00:00Z", "john", "", "web", "/home", "view", nil)))
-			assert.NoError(t, p.Track(newTestEvent("2000-01-01T00:00:30Z", "john", "", "web", "/about", "view", nil)))
-			assert.NoError(t, p.Track(newTestEvent("2000-01-01T00:01:00Z", "john", "", "web", "/signup", "view", nil)))
-			assert.NoError(t, p.Track(newTestEvent("2000-01-01T00:02:00Z", "john", "", "web", "/checkout", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:00:00Z", "john", "", "web", "/home", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:00:30Z", "john", "", "web", "/about", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:01:00Z", "john", "", "web", "/signup", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:02:00Z", "john", "", "web", "/checkout", "view", nil)))
 
 			// Track: "susy" only completes the first step.
-			assert.NoError(t, p.Track(newTestEvent("2000-01-02T00:00:00Z", "susy", "", "web", "/home", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-02T00:00:00Z", "susy", "", "web", "/home", "view", nil)))
 
 			// Track: "jim" completes the whole checkout but not in one session.
-			assert.NoError(t, p.Track(newTestEvent("2000-01-01T00:00:00Z", "jim", "", "web", "/home", "view", nil)))
-			assert.NoError(t, p.Track(newTestEvent("2000-01-01T00:01:00Z", "jim", "", "web", "/signup", "view", nil)))
-			assert.NoError(t, p.Track(newTestEvent("2000-01-10T00:00:00Z", "jim", "", "web", "/checkout", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:00:00Z", "jim", "", "web", "/home", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-01T00:01:00Z", "jim", "", "web", "/signup", "view", nil)))
+			assert.NoError(t, a.Track(newTestEvent("2000-01-10T00:00:00Z", "jim", "", "web", "/checkout", "view", nil)))
 
 			// Execute funnel query.
 			results, err := f.Query()

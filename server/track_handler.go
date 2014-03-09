@@ -18,8 +18,8 @@ func (h *trackHandler) install() {
 func (h *trackHandler) track(w http.ResponseWriter, r *http.Request) {
 	tx := h.transaction(r)
 
-	// Find project by API key.
-	p, err := tx.ProjectByAPIKey(r.FormValue("apiKey"))
+	// Find account by API key.
+	a, err := tx.AccountByAPIKey(r.FormValue("apiKey"))
 	if err != nil {
 		http.Error(w, "invalid api key", http.StatusBadRequest)
 		return
@@ -43,7 +43,7 @@ func (h *trackHandler) track(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send event to Sky.
-	if err := p.Track(e); err != nil {
+	if err := a.Track(e); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -30,7 +30,7 @@ $ docker run skybox/skyboxd
 
 ### Accounts
 
-An Account is simply a collection of Users and Projects.
+An Account is simply a collection of Users and Persons.
 
 ```
 GET /accounts
@@ -43,58 +43,12 @@ DELETE /accounts/:id
 
 ### Users
 
-A User is a single login that has permission to view and change Projects within
-an Account.
-
 ```
 GET /users
 GET /users/:id
 POST /users
 PATCH /users/:id
 DELETE /users/:id
-```
-
-
-### Projects
-
-A Project is a collection of Persons.
-
-```
-GET /projects
-GET /projects/:id
-POST /projects
-PATCH /projects/:id
-DELETE /projects/:id
-```
-
-
-### Persons
-
-A Person is an entity that can have events tracked against them. All Person data
-is stored inside Sky. They are created automatically through the tracking API.
-
-```
-# Retrieve the current state of a person.
-GET /projects/:id/persons/:id
-
-# Delete a person from the project.
-DELETE /projects/:id/persons:id
-```
-
-Persons are just a collection of events so you can see the events associated with a Person:
-
-```
-# Retrieve a list of all events associated with a person.
-GET /projects/:id/persons/:id/events
-
-# Retrieve a single event at a given point in time associated with a person.
-GET /projects/:id/persons/:id/events/:timestamp
-
-# Update an event at a given timestamp.
-PATCH /projects/:id/persons/:id/events/:timestamp
-
-# Delete an event at a given timestamp.
-DELETE /projects/:id/persons/:id/events/:timestamp
 ```
 
 

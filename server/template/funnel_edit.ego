@@ -31,11 +31,6 @@
           </div>
 
           <div class="form-group">
-            <label for="name">Project</label>
-            <input type="text" class="form-control" id="projectID" name="projectID" value="<%= t.Funnel.ProjectID %>"/>
-          </div>
-
-          <div class="form-group">
             <label for="name">Steps</label>
             <% for i, step := range t.Funnel.Steps { %>
               <input type="text" class="form-control" id="step[<%=i%>].condition" name="step[<%=i%>].condition" value="<%= step.Condition %>"/>

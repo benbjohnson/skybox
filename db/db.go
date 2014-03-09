@@ -33,23 +33,17 @@ func (db *DB) Open(path string, mode os.FileMode) error {
 		err = tx.CreateBucketIfNotExists("account.users")
 		assert(err == nil, "account.users bucket error: %s", err)
 
-		err = tx.CreateBucketIfNotExists("account.projects")
-		assert(err == nil, "account.projects bucket error: %s", err)
+		err = tx.CreateBucketIfNotExists("accounts.APIKey")
+		assert(err == nil, "accounts.APIKey bucket error: %s", err)
+
+		err = tx.CreateBucketIfNotExists("account.funnels")
+		assert(err == nil, "account.funnels bucket error: %s", err)
 
 		err = tx.CreateBucketIfNotExists("users")
 		assert(err == nil, "users bucket error: %s", err)
 
 		err = tx.CreateBucketIfNotExists("user.email")
 		assert(err == nil, "user.email bucket error: %s", err)
-
-		err = tx.CreateBucketIfNotExists("projects")
-		assert(err == nil, "projects bucket error: %s", err)
-
-		err = tx.CreateBucketIfNotExists("projects.APIKey")
-		assert(err == nil, "projects.APIKey bucket error: %s", err)
-
-		err = tx.CreateBucketIfNotExists("project.funnels")
-		assert(err == nil, "project.funnels bucket error: %s", err)
 
 		err = tx.CreateBucketIfNotExists("funnels")
 		assert(err == nil, "funnels bucket error: %s", err)

@@ -1,7 +1,11 @@
 package db
 
 import (
+	"fmt"
 	"sort"
+
+	"github.com/nu7hatch/gouuid"
+	"github.com/skydb/gosky"
 )
 
 var (
@@ -10,15 +14,39 @@ var (
 	ErrAccountNotFound = &Error{"account not found", nil}
 )
 
-// Account represents a collection of Users and Projects.
+// schema defines the required properties on the account's sky table.
+var schema = []*sky.Property{
+	{Name: "channel", Transient: true, DataType: sky.Factor},
+	{Name: "resource", Transient: true, DataType: sky.Factor},
+	{Name: "action", Transient: true, DataType: sky.Factor},
+	{Name: "domain", Transient: true, DataType: sky.Factor},
+	{Name: "path", Transient: true, DataType: sky.Factor},
+}
+
+// Account represents a collection of Users and Events.
 type Account struct {
-	Tx *Tx
-	id int
+	Tx     *Tx
+	id     int
+	APIKey string `json:"apiKey"`
 }
 
 // ID returns the account identifier.
 func (a *Account) ID() int {
 	return a.id
+}
+
+// SkyTableName returns the name of the table used by Sky.
+func (a *Account) SkyTableName() string {
+	assert(a.id > 0, "uninitialized account does not have a sky table")
+	return fmt.Sprintf("skybox-%d", a.id)
+}
+
+// SkyTable returns a reference to the table used by Sky.
+func (a *Account) SkyTable() *sky.Table {
+	return &sky.Table{
+		Client: &a.Tx.db.SkyClient,
+		Name:   a.SkyTableName(),
+	}
 }
 
 // Validate validates all fields of the account.
@@ -47,6 +75,14 @@ func (a *Account) Load() error {
 // Save commits the Account to the database.
 func (a *Account) Save() error {
 	assert(a.id > 0, "uninitialized account cannot be saved")
+
+	// Autogenerate an API key if one does not exist.
+	if len(a.APIKey) == 0 {
+		if err := a.GenerateAPIKey(); err != nil {
+			return err
+		}
+	}
+
 	return a.Tx.Bucket("accounts").Put(itob(a.id), marshal(a))
 }
 
@@ -56,7 +92,26 @@ func (a *Account) Delete() error {
 	assert(err == nil, "account delete error: %s", err)
 
 	// TODO: Remove all users.
-	// TODO: Remove all projects.
+
+	return nil
+}
+
+// GenerateAPIKey creates a new API key for an account.
+func (a *Account) GenerateAPIKey() error {
+	// Remove old API key from index.
+	if a.APIKey != "" {
+		removeFromUniqueIndex(a.Tx, "accounts.APIKey", []byte(a.APIKey))
+	}
+
+	// Generate new API key.
+	apiKey, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+	a.APIKey = apiKey.String()
+
+	// Update index.
+	insertIntoUniqueIndex(a.Tx, "accounts.APIKey", []byte(a.APIKey), a.ID())
 
 	return nil
 }
@@ -116,82 +171,132 @@ func (a *Account) Users() (Users, error) {
 	return users, nil
 }
 
-// Project retrieves a project with a given ID.
-// Only projects associated with this account will be returned.
-func (a *Account) Project(id int) (*Project, error) {
-	assert(a.id > 0, "find project on unsaved account: %d", a.id)
-	p, err := a.Tx.Project(id)
+// Funnel retrieves a funnel with a given ID.
+// Only funnels associated with this account will be returned.
+func (a *Account) Funnel(id int) (*Funnel, error) {
+	assert(a.id > 0, "find funnel on unsaved account: %d", a.id)
+	f, err := a.Tx.Funnel(id)
 	if err != nil {
 		return nil, err
-	} else if p.AccountID != a.ID() {
-		return nil, ErrProjectNotFound
+	} else if f.AccountID != a.ID() {
+		return nil, ErrFunnelNotFound
 	}
-	return p, nil
+	return f, nil
 }
 
-// CreateProject creates a new Project for this account.
-func (a *Account) CreateProject(p *Project) error {
-	assert(p.id == 0, "create project with a non-zero id: %d", p.id)
-	assert(a.id > 0, "create project on unsaved account: %d", a.id)
-	if err := p.Validate(); err != nil {
+// CreateFunnel creates a new Funnel for this account.
+func (a *Account) CreateFunnel(f *Funnel) error {
+	assert(f.id == 0, "create funnel with a non-zero id: %d", f.id)
+	assert(a.id > 0, "create funnel on unsaved account: %d", a.id)
+	if err := f.Validate(); err != nil {
 		return err
 	}
-
-	p.Tx = a.Tx
-	p.AccountID = a.id
 
 	// Verify account exists.
 	if _, err := a.get(); err != nil {
 		return err
 	}
 
+	f.Tx = a.Tx
+	f.AccountID = a.id
+
 	// Generate new id.
-	p.id, _ = a.Tx.Bucket("projects").NextSequence()
-	assert(p.id > 0, "project sequence error")
+	f.id, _ = a.Tx.Bucket("funnels").NextSequence()
+	assert(a.id > 0, "funnel sequence error")
 
-	// Add project id to secondary index.
-	insertIntoForeignKeyIndex(a.Tx, "account.projects", itob(a.id), p.id)
+	// Add funnel id to secondary index.
+	insertIntoForeignKeyIndex(a.Tx, "account.funnels", itob(a.id), f.id)
 
-	// Save project.
-	if err := p.Save(); err != nil {
+	// Save funnel.
+	return f.Save()
+}
+
+// Funnels retrieves a list of all funnels for the account.
+func (a *Account) Funnels() (Funnels, error) {
+	funnels := make(Funnels, 0)
+	index := getForeignKeyIndex(a.Tx, "account.funnels", itob(a.id))
+
+	for _, id := range index {
+		f := &Funnel{Tx: a.Tx, id: id}
+		err := f.Load()
+		assert(err == nil, "funnel (%d) not found from account.funnels index (%d)", f.id, a.id)
+		assert(f.AccountID == a.id, "funnel/account mismatch: %d (%d) not in %d", f.id, f.AccountID, a.id)
+		funnels = append(funnels, f)
+	}
+	sort.Sort(funnels)
+	return funnels, nil
+}
+
+// Track sends a single event to Sky.
+func (a *Account) Track(e *Event) error {
+	t := a.SkyTable()
+
+	// Serialize event and insert event into Sky.
+	id := e.ID()
+	skyEvent := e.Serialize()
+	if err := t.InsertEvent(id, skyEvent); err != nil {
 		return err
 	}
 
-	// Create Sky table.
-	if err := p.Migrate(); err != nil {
-		return err
-	}
+	// TODO(benbjohnson): Merge timelines if necessary.
+	// t.Merge(id, t.DeviceID)
 
 	return nil
 }
 
-// Projects retrieves a list of all projects for the account.
-func (a *Account) Projects() (Projects, error) {
-	projects := make(Projects, 0)
-	index := getForeignKeyIndex(a.Tx, "account.projects", itob(a.id))
-
-	for _, id := range index {
-		p := &Project{Tx: a.Tx, id: id}
-		err := p.Load()
-		assert(err == nil, "project (%d) not found from account.projects index (%d)", p.id, a.id)
-		assert(p.AccountID == a.id, "project/account mismatch: %d (%d) not in %d", p.id, p.AccountID, a.id)
-		projects = append(projects, p)
-	}
-	sort.Sort(projects)
-	return projects, nil
-}
-
-// Funnel retrieves a funnel with a given ID.
-// Only funels associated with projects in this account will be returned.
-func (a *Account) Funnel(id int) (*Funnel, error) {
-	assert(a.id > 0, "find funnel on unsaved account: %d", a.id)
-	f, err := a.Tx.Funnel(id)
+// Events returns a list of events for a given ID.
+func (a *Account) Events(id string) ([]*Event, error) {
+	t := a.SkyTable()
+	skyEvents, err := t.Events(id)
 	if err != nil {
 		return nil, err
-	} else if _, err := a.Project(f.ProjectID); err != nil {
-		return nil, ErrFunnelNotFound
 	}
-	return f, nil
+
+	events := make([]*Event, 0, len(skyEvents))
+	for _, skyEvent := range skyEvents {
+		event := &Event{}
+		event.Deserialize(id, skyEvent)
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+// Migrate creates a Sky table and updates the schema, if necessary.
+func (a *Account) Migrate() error {
+	name := a.SkyTableName()
+	if err := a.createSkyTableIfNotExists(); err != nil {
+		return fmt.Errorf("migrate table error: %s: %s", name, err)
+	}
+	for _, property := range schema {
+		if err := a.createSkyPropertyIfNotExists(property); err != nil {
+			return fmt.Errorf("migrate property error: %s: %s: %s", name, property.Name, err)
+		}
+	}
+	return nil
+}
+
+// Reset drops the sky table and recreates it.
+func (a *Account) Reset() error {
+	c := &a.Tx.db.SkyClient
+	c.DeleteTable(a.SkyTableName())
+	return a.Migrate()
+}
+
+func (a *Account) createSkyTableIfNotExists() error {
+	c := &a.Tx.db.SkyClient
+	if t, err := c.Table(a.SkyTableName()); t != nil && err == nil {
+		return err
+	}
+	return c.CreateTable(a.SkyTable())
+}
+
+func (a *Account) createSkyPropertyIfNotExists(property *sky.Property) error {
+	t := a.SkyTable()
+	if tmp, err := t.Property(property.Name); tmp != nil && err == nil {
+		return err
+	}
+	return t.CreateProperty(property)
 }
 
 type Accounts []*Account

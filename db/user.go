@@ -36,7 +36,7 @@ const (
 )
 
 // User represents a user within the system.
-// A User belongs to an Account and can access all Projects within the Account.
+// A User belongs to an Account.
 type User struct {
 	Tx        *Tx
 	id        int

@@ -54,26 +54,22 @@ func withServer(fn func(*Server)) {
 	s.Close()
 }
 
-// withServerAndProject executes a function with an open server and created project.
-func withServerAndProject(fn func(*Server, *db.Project)) {
+// withServerAndAccount executes a function with an open server and created account.
+func withServerAndAccount(fn func(*Server, *db.Account)) {
 	withServer(func(s *Server) {
-		p := &db.Project{Name: "My Project"}
+		a := &db.Account{}
 		err := s.DB.Do(func(tx *db.Tx) error {
-			a := &db.Account{}
 			if err := tx.CreateAccount(a); err != nil {
 				panic("create account error: " + err.Error())
 			}
-			if err := a.CreateProject(p); err != nil {
-				panic("create project error: " + err.Error())
-			}
-			if err := p.Reset(); err != nil {
-				panic("reset project error: " + err.Error())
+			if err := a.Reset(); err != nil {
+				panic("reset account error: " + err.Error())
 			}
 			return nil
 		})
 		if err != nil {
 			panic("init error: " + err.Error())
 		}
-		fn(s, p)
+		fn(s, a)
 	})
 }
