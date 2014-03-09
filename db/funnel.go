@@ -1,5 +1,14 @@
 package db
 
+import (
+	"bytes"
+	"fmt"
+	"strings"
+)
+
+// SessionIdleTime is the amount of idle time that delimits sessions.
+const SessionIdleTime = "2 HOURS"
+
 var (
 	// ErrFunnelNotFound is returned when a funnel does not exist.
 	ErrFunnelNotFound = &Error{"funnel not found", nil}
@@ -77,8 +86,83 @@ func (f *Funnel) Delete() error {
 	return nil
 }
 
+// Query executes a query against the funnel and returns the result.
+func (f *Funnel) Query() (*FunnelResult, error) {
+	// Generate query.
+	querystring := f.QueryString()
+
+	// Retrieve Sky table.
+	p := &Project{id: f.ProjectID, Tx: f.Tx}
+	t := p.SkyTable()
+
+	// Execute query against Sky.
+	raw, err := t.Query(querystring)
+	if err != nil {
+		return nil, err
+	}
+
+	// Deserialize into results.
+	result := &FunnelResult{
+		Name:  f.Name,
+		Steps: make([]*FunnelStepResult, 0),
+	}
+	for i, step := range f.Steps {
+		stepResult := &FunnelStepResult{Condition: step.Condition}
+		if rawStep, ok := raw[fmt.Sprintf("step%d", i)].(map[string]interface{}); ok {
+			if count, ok := rawStep["count"].(float64); ok {
+				stepResult.Count = int(count)
+			}
+		}
+		result.Steps = append(result.Steps, stepResult)
+	}
+
+	return result, nil
+}
+
+// QueryString generates a funnel query for use in Sky.
+func (f *Funnel) QueryString() string {
+	var buf bytes.Buffer
+
+	fmt.Fprintln(&buf, "FOR EACH SESSION DELIMITED BY", SessionIdleTime)
+	fmt.Fprintln(&buf, "  FOR EACH EVENT")
+
+	for i, step := range f.Steps {
+		var within = ""
+		if i > 0 {
+			within = " WITHIN 1..100000 STEPS"
+		}
+		// Write step condition.
+		fmt.Fprintf(&buf, "%s    WHEN %s%s THEN\n", strings.Repeat("  ", i), step.Condition, within)
+
+		// Write step selection.
+		fmt.Fprintf(&buf, "%s      SELECT count() INTO \"step%d\"\n", strings.Repeat("  ", i), i)
+	}
+
+	for i, _ := range f.Steps {
+		// Write condition block close.
+		fmt.Fprintf(&buf, "%s    END\n", strings.Repeat("  ", len(f.Steps)-i-1))
+	}
+
+	fmt.Fprintln(&buf, "  END")
+	fmt.Fprintln(&buf, "END")
+
+	return buf.String()
+}
+
 type Funnels []*Funnel
 
 func (s Funnels) Len() int           { return len(s) }
 func (s Funnels) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s Funnels) Less(i, j int) bool { return s[i].Name < s[j].Name }
+
+// FunnelResult represents the results of an executed funnel query.
+type FunnelResult struct {
+	Name  string              `json:"name"`
+	Steps []*FunnelStepResult `json:"steps"`
+}
+
+// FunnelStepResult represents the result of one step in an executed funnel query.
+type FunnelStepResult struct {
+	Condition string `json:"condition"`
+	Count     int    `json:"count"`
+}
