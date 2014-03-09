@@ -21,10 +21,19 @@ type AccountTemplate struct {
 
 type FunnelTemplate struct {
 	*Template
-	Funnel *db.Funnel
+	Funnel    *db.Funnel
+	Resources []string
 }
 
 type FunnelsTemplate struct {
 	*Template
 	Funnels []*db.Funnel
+}
+
+// iif returns trueValue if condition is true. Otherwise returns falseValue.
+func iif(condition bool, trueValue, falseValue interface{}) interface{} {
+	if condition {
+		return trueValue
+	}
+	return falseValue
 }

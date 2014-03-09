@@ -231,6 +231,41 @@ func TestAccountTrack(t *testing.T) {
 	})
 }
 
+// Ensure that an account can retrieve a list of unique resources.
+func TestAccountResources(t *testing.T) {
+	withDB(func(db *DB) {
+		db.Do(func(tx *Tx) error {
+			a1, a2, a3 := &Account{}, &Account{}, &Account{}
+			tx.CreateAccount(a1)
+			tx.CreateAccount(a2)
+			tx.CreateAccount(a3)
+			a1.Reset()
+			a2.Reset()
+			a3.Reset()
+
+			// Add some events.
+			assert.NoError(t, a1.Track(newTestEvent("2000-01-01T00:00:00Z", "john", "DEV0", "web", "/", "view", nil)))
+			assert.NoError(t, a1.Track(newTestEvent("2000-01-01T00:00:01Z", "john", "DEV1", "web", "/signup", "view", nil)))
+			assert.NoError(t, a1.Track(newTestEvent("2000-01-01T00:00:02Z", "susy", "DEV2", "web", "/cancel", "view", nil)))
+			assert.NoError(t, a2.Track(newTestEvent("2000-01-01T00:00:02Z", "john", "DEV2", "web", "/blah", "view", nil)))
+
+			// Retrieve resources.
+			resources, err := a1.Resources()
+			assert.NoError(t, err)
+			assert.Equal(t, resources, []string{"/", "/cancel", "/signup"})
+
+			resources, err = a2.Resources()
+			assert.NoError(t, err)
+			assert.Equal(t, resources, []string{"/blah"})
+
+			resources, err = a3.Resources()
+			assert.NoError(t, err)
+			assert.Equal(t, resources, []string{})
+			return nil
+		})
+	})
+}
+
 func newTestEvent(timestamp, userID, deviceID, channel, resource, action string, data map[string]interface{}) *Event {
 	return &Event{
 		Timestamp: mustParseTime(timestamp),

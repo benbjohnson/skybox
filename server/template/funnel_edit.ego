@@ -1,5 +1,6 @@
 <%! func (t *FunnelTemplate) Edit(w io.Writer) error %>
 
+<%% import "encoding/json" %%>
 <%% import "fmt" %%>
 <%% import "io" %%>
 
@@ -30,15 +31,10 @@
             <input type="text" class="form-control" id="name" name="name" value="<%= t.Funnel.Name %>"/>
           </div>
 
-          <div class="form-group">
-            <label for="name">Steps</label>
-            <% for i, step := range t.Funnel.Steps { %>
-              <input type="text" class="form-control" id="step[<%=i%>].condition" name="step[<%=i%>].condition" value="<%= step.Condition %>"/>
+          <div class="steps"></div>
 
-              <% if i == len(t.Funnel.Steps) - 1 { %>
-                <button class="btn btn-link">Add another step</button>
-              <% } %>
-            <% } %>
+          <div class="form-group">
+            <a class="add-step" style="cursor: pointer;" class="btn btn-link">Add another step</a>
           </div>
 
           <% if t.Funnel.ID() == 0 { %>
@@ -46,10 +42,17 @@
           <% } else { %>
             <button type="submit" class="btn btn-primary">Save Funnel</button>
           <% } %>
-          <button class="btn btn-link" onclick="window.history.back(); return false">Cancel</button>
+          <a class="btn btn-link" href="/funnels">Cancel</a>
         </form>
       </div>
     </div> <!-- /container -->
   </body>
+
+  <script src="/assets/funnel_edit.js"></script>
+  <script>
+    var funnel = <% json.NewEncoder(w).Encode(t.Funnel) %>;
+    var resources = <% json.NewEncoder(w).Encode(t.Resources) %>;
+    render(funnel);
+  </script>
 </html>
 

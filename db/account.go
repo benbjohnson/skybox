@@ -262,6 +262,24 @@ func (a *Account) Events(id string) ([]*Event, error) {
 	return events, nil
 }
 
+// Resources returns a list unique resources on the account.
+func (a *Account) Resources() ([]string, error) {
+	t := a.SkyTable()
+	results, err := t.Query("SELECT count() GROUP BY resource")
+	if err != nil {
+		return nil, err
+	}
+
+	resources := make([]string, 0, len(results))
+	if results, ok := results["resource"].(map[string]interface{}); ok {
+		for resource, _ := range results {
+			resources = append(resources, resource)
+		}
+	}
+	sort.Sort(sort.StringSlice(resources))
+	return resources, nil
+}
+
 // Migrate creates a Sky table and updates the schema, if necessary.
 func (a *Account) Migrate() error {
 	name := a.SkyTableName()

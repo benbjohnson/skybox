@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -20,6 +21,7 @@ func newFunnelsHandler(s *Server) *funnelsHandler {
 func (h *funnelsHandler) install() {
 	h.server.Handle("/funnels", h.transact(h.authorize(http.HandlerFunc(h.index)))).Methods("GET")
 	h.server.Handle("/funnels/{id}", h.transact(h.authorize(http.HandlerFunc(h.edit)))).Methods("GET")
+	h.server.Handle("/funnels/{id}", h.rwtransact(h.authorize(http.HandlerFunc(h.save)))).Methods("POST")
 }
 
 func (h *funnelsHandler) index(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +49,65 @@ func (h *funnelsHandler) edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	t := &template.FunnelTemplate{template.New(h.session(r), user, account), f}
+	// Find all resources.
+	resources, err := account.Resources()
+	if err != nil {
+		http.Error(w, "resources: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	t := &template.FunnelTemplate{template.New(h.session(r), user, account), f, resources}
 	t.Edit(w)
+}
+
+func (h *funnelsHandler) save(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	user, account := h.auth(r)
+	session := h.session(r)
+	tx := h.transaction(r)
+
+	// Find funnel.
+	var f = &db.Funnel{}
+	if id, _ := strconv.Atoi(vars["id"]); id != 0 {
+		var err error
+		f, err = account.Funnel(id)
+		if err != nil {
+			h.notFound(w, r)
+			return
+		}
+	}
+
+	// Update attributes.
+	f.Name = r.FormValue("name")
+
+	// Create steps.
+	f.Steps = make([]*db.FunnelStep, 0)
+	for {
+		condition := r.FormValue(fmt.Sprintf("step[%d].condition", len(f.Steps)))
+		if condition == "" {
+			break
+		}
+		f.Steps = append(f.Steps, &db.FunnelStep{Condition: condition})
+	}
+
+	// Save.
+	var err error
+	if f.ID() == 0 {
+		err = account.CreateFunnel(f)
+	} else {
+		err = f.Save()
+	}
+
+	if err != nil {
+		tx.Rollback()
+		session.AddFlash(err.Error())
+		session.Save(r, w)
+		t := &template.FunnelTemplate{template.New(session, user, account), f, nil}
+		t.Edit(w)
+		return
+	}
+
+	session.AddFlash("funnel successfully saved")
+	session.Save(r, w)
+	http.Redirect(w, r, "/funnels", http.StatusFound)
 }

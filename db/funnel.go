@@ -92,8 +92,8 @@ func (f *Funnel) Query() (*FunnelResult, error) {
 	querystring := f.QueryString()
 
 	// Retrieve Sky table.
-	p := &Account{id: f.AccountID, Tx: f.Tx}
-	t := p.SkyTable()
+	a := &Account{id: f.AccountID, Tx: f.Tx}
+	t := a.SkyTable()
 
 	// Execute query against Sky.
 	raw, err := t.Query(querystring)
