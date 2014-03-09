@@ -1,64 +1,46 @@
 Skybox
 ======
 
-Skybox is an open source behavioral analytics application that provides similar
-functionality to tools like MixPanel or KISSMetrics. The idea is to provide a
-simple API to store all the events about your users and a query interface for
-analyzing how they behave.
+Skybox is an open source user track and funnel analysis application.
+It provides a simple, drop-in JavaScript snippet that lets you to automatically track visits to your site.
+You can then go to the application and build funnels on the fly to see what your users are doing.
 
 
 ## Getting Started
 
-To run skybox, you'll just need to run Sky v0.4.0 or higher and execute the
-skybox server:
+If you want to try out Skybox, you can sign up for an account at: [http://skyboxanalytics.com](http://skyboxanalytics.com)
+
+
+### Running it on your server
+
+To install Skybox, you'll first need to get the [Sky behavioral analytics database](http://github.com/skydb/sky) installed.
+The easiest way to do this is to run it using Docker:
 
 ```sh
-$ skyboxd
+$ docker pull skydb/sky-llvm
+$ docker -t -i -p 8585:8585 -v ~/sky:/var/lib/sky:rw skydb/sky-llvm 
 ```
 
-An easier to way to get up and running is simply to use the prebuilt Docker container:
+Then in a separate window, download the latest version of skybox and run it.
 
 ```sh
-$ docker pull skybox/skyboxd
-$ docker run skybox/skyboxd
+$ wget https://github.com/skybox/skybox/releases/download/v0.1.0/skyboxd_v0.1.0_linux_amd64.tar.gz
+$ tar zxvf skyboxd_v0.1.0_linux_amd64.tar.gz
+$ cd skyboxd_v0.1.0_linux_amd64
+$ ./skyboxd --data-dir ~/skybox
+Listening on http://localhost:7000
 ```
 
-<!-- TODO: Expand on 'Getting Started' -->
+Now navigate to [http://localhost:7000](http://localhost:7000) and you can create an account.
+Once you're logged in you'll see the JavaScript snippet you'll need to paste onto your web site.
 
 
-## API
+## Events & Funnel Analysis
 
-### Accounts
-
-An Account is simply a collection of Users and Persons.
-
-```
-GET /accounts
-GET /accounts/:id
-POST /accounts
-PATCH /accounts/:id
-DELETE /accounts/:id
-```
+TODO
 
 
-### Users
+## Roadmap
 
-```
-GET /users
-GET /users/:id
-POST /users
-PATCH /users/:id
-DELETE /users/:id
-```
-
-
-### Tracking API
-
-Persons and their state only exist as a set of events. To create a person or to
-change a person you must use the tracking API.
-
-```
-POST /track
-```
-
+TODO
 
