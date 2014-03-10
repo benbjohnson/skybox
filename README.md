@@ -83,5 +83,22 @@ Here we can see that 500 people went to our home page, only 200 of those people 
 
 ## Roadmap
 
-TODO
+The aim of Skybox is to provide really useful data analysis and visualization.
+Many tools throw on a ton of useless features and eye candy but Skybox is meant to be simple.
+Because of this goal, we want to add features as people need them.
+If you'd like to see a feature added please add a Github issue to discuss it.
 
+Some of the features we're thinking about adding include:
+
+* REST API - You should own your data and do whatever you want with it.
+
+* Interactive funnel analysis - Drill into charts on the fly to understand behavior better.
+
+* Reverse funnel analysis - Start from an event and work backwards to see what events led up to it.
+
+* Cohort analysis - See how different groups perform over time.
+
+Please let us know your thoughts!
+
+Skybox is built on top of SkyDB so there's a powerful query engine to take advantage of.
+We want to make sure that Skybox is providing the best view into that data that it can.
