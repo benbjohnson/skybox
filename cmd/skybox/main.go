@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"net"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/skybox/skybox/db"
@@ -17,18 +15,19 @@ import (
 
 var (
 	dataDir  = flag.String("data-dir", "", "data directory")
-	port     = flag.Int("port", 7000, "http port")
 	certFile = flag.String("cert-file", "", "SSL certificate file")
 	keyFile  = flag.String("key-file", "", "SSL key file")
 )
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: skyboxd [opts]")
+	fmt.Fprintln(os.Stderr, "usage: skybox [opts]")
 	flag.PrintDefaults()
 	os.Exit(2)
 }
 
 func main() {
+	log.SetFlags(0)
+
 	// Read configuration.
 	flag.Usage = usage
 	flag.Parse()
@@ -59,8 +58,8 @@ func main() {
 
 	// Start server.
 	var s server.Server
-	s.Addr = net.JoinHostPort("", strconv.Itoa(*port))
 	s.DB = &db
 	log.Printf("Listening on http://localhost%s", s.Addr)
+	log.SetFlags(log.LstdFlags)
 	log.Fatal(s.ListenAndServe())
 }
