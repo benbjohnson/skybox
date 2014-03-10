@@ -39,7 +39,7 @@ func (s *Server) ListenAndServe() error {
 	(&funnelsHandler{handler{server: s}}).install()
 
 	// Start listening on the socket.
-	listener, err := net.Listen("tcp", s.Addr)
+	listener, err := net.Listen("tcp", ":http")
 	if err != nil {
 		return err
 	}
