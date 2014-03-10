@@ -55,6 +55,32 @@ These events track several pieces of information:
 Currently the Skybox interface only works with the resource when defining funnels but the funnel language will be opened up in the near future.
 
 
+## Funnel Analysis
+
+The most basic tool for behavioral analysis is the funnel.
+A funnel defines multiple steps that a user is expected to complete.
+
+For example, a conversion funnel might look something like this:
+
+```
+/index.html -> /pricing -> /signup
+```
+
+By defining the expected behavior we can use Skybox to tell us how many people made it to each step along the way:
+
+```
+    500
+  ███████
+  ███████         200
+  ███████       ███████         50
+  ███████       ███████       ███████
+  ███████       ███████       ███████
+/index.html -> /pricing   ->  /signup
+```
+
+Here we can see that 500 people went to our home page, only 200 of those people made it to the pricing page, and finally only 50 people actually made it to the sign up page. By finding where users drop off along the way we can find problem areas in our user experience and fix them.
+
+
 ## Roadmap
 
 TODO
