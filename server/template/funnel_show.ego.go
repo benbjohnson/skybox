@@ -159,7 +159,7 @@ func (t *FunnelTemplate) Show(w io.Writer) error {
 		return err
 	}
 //line funnel_show.ego:37
-	for _, f := range t.FunnelResult.Steps {
+	for _, f := range t.Result.Steps {
 //line funnel_show.ego:38
 		if _, err := fmt.Fprintf(w, "\n            "); err != nil {
 			return err
@@ -243,7 +243,7 @@ func (t *FunnelTemplate) Show(w io.Writer) error {
 		return err
 	}
 //line funnel_show.ego:54
-	json.NewEncoder(w).Encode(t.FunnelResult)
+	json.NewEncoder(w).Encode(t.Result)
 //line funnel_show.ego:54
 	if _, err := fmt.Fprintf(w, ";\n    update(result);\n  "); err != nil {
 		return err

@@ -3,23 +3,29 @@ package server
 import (
 	"net/http"
 
+	"github.com/skybox/skybox/db"
 	"github.com/skybox/skybox/server/template"
 )
 
-type accountHandler struct {
-	handler
+type AccountHandler struct {
+	*Handler
 }
 
-func newAccountHandler(s *Server) *accountHandler {
-	return &accountHandler{handler: handler{server: s}}
+func NewAccountHandler(parent *Handler) *AccountHandler {
+	h := &AccountHandler{Handler: parent}
+	h.Handle("/account", http.HandlerFunc(h.show)).Methods("GET")
+	return h
 }
 
-func (h *accountHandler) install() {
-	h.server.Handle("/account", h.transact(h.authorize(http.HandlerFunc(h.show)))).Methods("GET")
-}
+func (h *AccountHandler) show(w http.ResponseWriter, r *http.Request) {
+	h.db.With(func(tx *db.Tx) error {
+		user, account := h.Authenticate(tx, r)
+		if user == nil {
+			h.Unauthorized(w, r)
+			return nil
+		}
 
-func (h *accountHandler) show(w http.ResponseWriter, r *http.Request) {
-	user, account := h.auth(r)
-	t := &template.AccountTemplate{template.New(h.session(r), user, account)}
-	t.Show(w)
+		template.NewAccountTemplate(h.Session(r), user, account).Show(w)
+		return nil
+	})
 }
