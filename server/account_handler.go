@@ -25,7 +25,7 @@ func (h *AccountHandler) show(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 
-		template.NewAccountTemplate(h.Session(r), user, account).Show(w)
+		template.NewAccountTemplate(h.Flashes(w, r), user, account).Show(w)
 		return nil
 	})
 }

@@ -14,13 +14,14 @@ import (
   <body id="signup">
     <div class="container">
       <% t.Nav(w) %>
-      <% t.Flash(w) %>
 
       <div class="panel panel-default">
         <div class="panel-heading">
           <h3 class="panel-title">Sign Up</h3>
         </div>
         <div class="panel-body">
+          <% t.Flash(w) %>
+          
           <form role="form" action="/signup" method="POST">
             <div class="form-group">
               <label for="email">E-mail address</label>

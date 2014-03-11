@@ -2,9 +2,13 @@
 
 <%% import "fmt" %%>
 <%% import "io" %%>
+<%% import "unicode" %%>
 
-<% if t.Session != nil { %>
-  <% for _, flash := range t.Session.Flashes() { %>
-    <p class="bg-danger"><%= flash %></p>
+<% for _, flash := range t.Flashes { %>
+  <% if len(flash) > 0 { %>
+    <% flash = fmt.Sprintf("%c%s", unicode.ToUpper(rune(flash[0])), flash[1:]) %>
+    <p class="alert bg-danger">
+      <%= flash %>
+    </p>
   <% } %>
 <% } %>

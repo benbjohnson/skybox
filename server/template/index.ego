@@ -3,15 +3,139 @@
 <%% import "fmt" %%>
 <%% import "io" %%>
 
+
 <!DOCTYPE html>
 <html lang="en">
-  <% t.Head(w, "") %>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Open source funnel analysis">
 
-  <body id="index">
+    <title>Skybox Analytics</title>
+    <link href="/assets/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Space out content a bit */
+        body {
+          padding-top: 20px;
+          padding-bottom: 20px;
+        }
+
+        .header,
+        .marketing,
+        .footer {
+          padding-right: 15px;
+          padding-left: 15px;
+        }
+
+        .header {
+          border-bottom: 1px solid #e5e5e5;
+        }
+        .header h3 {
+          padding-bottom: 19px;
+          margin-top: 0;
+          margin-bottom: 0;
+          line-height: 40px;
+        }
+
+        .footer {
+          padding-top: 19px;
+          color: #777;
+          border-top: 1px solid #e5e5e5;
+        }
+
+        @media (min-width: 768px) {
+          .container {
+            max-width: 730px;
+          }
+        }
+        .container-narrow > hr {
+          margin: 30px 0;
+        }
+
+        .jumbotron {
+          text-align: center;
+          border-bottom: 1px solid #e5e5e5;
+        }
+        .jumbotron .btn {
+          padding: 14px 24px;
+          font-size: 21px;
+        }
+
+        .marketing {
+          margin: 40px 0;
+        }
+        .marketing p + h4 {
+          margin-top: 28px;
+        }
+
+        @media screen and (min-width: 768px) {
+          .header,
+          .marketing,
+          .footer {
+            padding-right: 0;
+            padding-left: 0;
+          }
+          .header {
+            margin-bottom: 30px;
+          }
+          .jumbotron {
+            border-bottom: 0;
+          }
+        }
+    </style>
+  </head>
+
+  <body class="index">
     <div class="container">
-      <% t.Nav(w) %>
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="/login">Log in</a></li>
+          <li><a href="/signup">Sign up</a></li>
+        </ul>
+        <h3 class="text-muted">Skybox Analytics</h3>
+      </div>
 
+      <div class="jumbotron">
+        <h1>Open Source Funnel Analysis</h1>
+        <p class="lead">
+            Skybox is an open source funnel analysis and behavioral analytics tool.
+            Simply add a simple JavaScript tracking snippet to your site and you'll be building funnels in no time.
+        </p>
+        <p>
+            <a class="btn btn-lg btn-success" href="/signup" role="button">Sign up</a>
+            <!-- <a class="btn btn-lg btn-primary" href="/demo" role="button">Try it out</a> -->
+        </p>
+      </div>
+
+      <div class="row marketing">
+        <div class="col-lg-6">
+          <h4>Web Site Tracking</h4>
+          <p>
+            After you sign up you'll get a JavaScript snippet to paste on your site.
+            That's all the installation required.
+          </p>
+
+          <h4>Open Source</h4>
+          <p>
+            Have questions? Want a new feature? Come find us on our <a href="https://github.com/skybox/skybox" target="_blank">Github</a> project page!
+            Please add a Github issue if you experience any problems.
+          </p>
+        </div>
+
+        <div class="col-lg-6">
+          <h4>Real-time Funnels</h4>
+          <p>
+            Skybox is backed by the powerful <a href="https://github.com/skydb/sky" target="_blank">SkyDB</a> behavioral analytics database.
+            That means that all your data is available immediately.
+          </p>
+
+          <h4>APIs and More</h4>
+          <p>
+            It's not quite ready yet but we'll be releasing an API so you can track user events from anywhere and pull Skybox data into your own application.
+          </p>
+        </div>
+      </div>
     </div> <!-- /container -->
   </body>
 </html>
-

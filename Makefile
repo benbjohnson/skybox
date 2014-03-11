@@ -14,7 +14,7 @@ bench:
 # required: http://dave.cheney.net/2012/09/08/an-introduction-to-cross-compilation-with-go
 build: assets templates
 	mkdir -p build
-	cd cmd/skybox && goxc -c=.goxc.json -d ../../build
+	cd cmd/skybox && goxc -c=.goxc.json -pr="$(PRERELEASE)" -d ../../build
 
 # http://cloc.sourceforge.net/
 cloc:

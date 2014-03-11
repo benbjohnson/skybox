@@ -32,7 +32,7 @@ func (h *FunnelHandler) index(w http.ResponseWriter, r *http.Request) {
 		}
 		funnels, _ := account.Funnels()
 		t := &template.FunnelsTemplate{
-			Template: template.New(h.Session(r), user, account),
+			Template: template.New(h.Flashes(w, r), user, account),
 			Funnels:  funnels,
 		}
 		t.Index(w)
@@ -65,7 +65,7 @@ func (h *FunnelHandler) show(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t := &template.FunnelTemplate{
-			Template: template.New(h.Session(r), user, account),
+			Template: template.New(h.Flashes(w, r), user, account),
 			Funnel:   f,
 			Result:   result,
 		}
@@ -105,7 +105,7 @@ func (h *FunnelHandler) edit(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t := &template.FunnelTemplate{
-			Template:  template.New(h.Session(r), user, account),
+			Template:  template.New(h.Flashes(w, r), user, account),
 			Funnel:    f,
 			Resources: resources,
 		}
@@ -157,11 +157,8 @@ func (h *FunnelHandler) save(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err != nil {
-			tx.Rollback()
-			session.AddFlash(err.Error())
-			session.Save(r, w)
 			t := &template.FunnelTemplate{
-				Template: template.New(session, user, account),
+				Template: template.New([]string{err.Error()}, user, account),
 				Funnel:   f,
 			}
 			t.Edit(w)

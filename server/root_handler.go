@@ -30,9 +30,9 @@ func (h *RootHandler) index(w http.ResponseWriter, r *http.Request) {
 	h.db.With(func(tx *db.Tx) error {
 		user, account := h.Authenticate(tx, r)
 		if user == nil {
-			template.New(h.Session(r), user, account).Index(w)
+			template.New(h.Flashes(w, r), user, account).Index(w)
 		} else {
-			template.New(h.Session(r), user, account).Dashboard(w)
+			template.New(h.Flashes(w, r), user, account).Dashboard(w)
 		}
 		return nil
 	})
@@ -63,15 +63,17 @@ func (h *RootHandler) skyboxjs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RootHandler) login(w http.ResponseWriter, r *http.Request) {
+	session := h.Session(r)
 	h.db.With(func(tx *db.Tx) error {
 		user, _ := h.Authenticate(tx, r)
 		if user != nil {
 			http.Redirect(w, r, "/", http.StatusFound)
 			return nil
 		}
-		template.New(h.Session(r), nil, nil).Login(w)
+		template.New(h.Flashes(w, r), nil, nil).Login(w)
 		return nil
 	})
+	session.Save(r, w)
 }
 
 func (h *RootHandler) doLogin(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +128,7 @@ func (h *RootHandler) signup(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 
-		template.New(h.Session(r), nil, nil).Signup(w)
+		template.New(h.Flashes(w, r), nil, nil).Signup(w)
 		return nil
 	})
 }
@@ -139,7 +141,7 @@ func (h *RootHandler) doSignup(w http.ResponseWriter, r *http.Request) {
 		if err := tx.CreateAccount(account); err != nil {
 			session.AddFlash(err.Error())
 			session.Save(r, w)
-			http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
+			http.Redirect(w, r, r.URL.Path, http.StatusFound)
 			return err
 		}
 
@@ -153,7 +155,7 @@ func (h *RootHandler) doSignup(w http.ResponseWriter, r *http.Request) {
 		if err := account.CreateUser(user); err != nil {
 			session.AddFlash(err.Error())
 			session.Save(r, w)
-			http.Redirect(w, r, r.URL.Path, http.StatusInternalServerError)
+			http.Redirect(w, r, r.URL.Path, http.StatusFound)
 			return err
 		}
 

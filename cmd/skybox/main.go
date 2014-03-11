@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/skybox/skybox/db"
 	"github.com/skybox/skybox/server"
 )
@@ -65,6 +66,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	logHandler := handlers.CombinedLoggingHandler(os.Stdout, h)
 
 	// Start servers.
 	log.Printf("Listening on http://localhost%s", *addr)
@@ -73,9 +75,9 @@ func main() {
 	}
 	log.SetFlags(log.LstdFlags)
 
-	go func() { log.Fatal(http.ListenAndServe(*addr, h)) }()
+	go func() { log.Fatal(http.ListenAndServe(*addr, logHandler)) }()
 	if useTLS {
-		go func() { log.Fatal(http.ListenAndServeTLS(*tlsAddr, *certFile, *keyFile, h)) }()
+		go func() { log.Fatal(http.ListenAndServeTLS(*tlsAddr, *certFile, *keyFile, logHandler)) }()
 	}
 
 	select {}

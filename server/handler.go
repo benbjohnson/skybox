@@ -42,14 +42,6 @@ func NewHandler(db *db.DB) (*Handler, error) {
 	NewRootHandler(h)
 	NewAccountHandler(h)
 	NewFunnelHandler(h)
-
-	// Setup routes.
-	/*
-		(&homeHandler{handler{server: s}}).install()
-		(&trackHandler{handler{server: s}}).install()
-		(&accountHandler{handler{server: s}}).install()
-		(&funnelsHandler{handler{server: s}}).install()
-	*/
 	return h, nil
 }
 
@@ -122,6 +114,19 @@ func (h *Handler) Session(r *http.Request) *sessions.Session {
 	return session
 }
 
+// Flashes retrieves all flashes from the session and clears them.
+func (h *Handler) Flashes(w http.ResponseWriter, r *http.Request) []string {
+	session := h.Session(r)
+	flashes := make([]string, 0)
+	for _, flash := range session.Flashes() {
+		if flash, ok := flash.(string); ok {
+			flashes = append(flashes, flash)
+		}
+	}
+	session.Save(r, w)
+	return flashes
+}
+
 // Unauthorized redirects to the home page.
 func (h *Handler) Unauthorized(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
@@ -130,5 +135,5 @@ func (h *Handler) Unauthorized(w http.ResponseWriter, r *http.Request) {
 // NotFound returns a 404 not found page.
 func (h *Handler) NotFound(tx *db.Tx, w http.ResponseWriter, r *http.Request) {
 	user, account := h.Authenticate(tx, r)
-	template.New(h.Session(r), user, account).NotFound(w)
+	template.New([]string{"page not found"}, user, account).NotFound(w)
 }

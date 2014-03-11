@@ -16,6 +16,9 @@ body {
 .navbar .navbar-nav.navbar-right:last-child {
   margin-right: -30px;
 }
+.alert {
+  padding: 10px 15px;
+}
 /***************************************
  * charts
  ***************************************/

@@ -1,26 +1,25 @@
 package template
 
 import (
-	"github.com/gorilla/sessions"
 	"github.com/skybox/skybox/db"
 )
 
 type Template struct {
-	Session *sessions.Session
+	Flashes []string
 	User    *db.User
 	Account *db.Account
 }
 
-func New(s *sessions.Session, u *db.User, a *db.Account) *Template {
-	return &Template{Session: s, User: u, Account: a}
+func New(flashes []string, u *db.User, a *db.Account) *Template {
+	return &Template{Flashes: flashes, User: u, Account: a}
 }
 
 type AccountTemplate struct {
 	*Template
 }
 
-func NewAccountTemplate(s *sessions.Session, u *db.User, a *db.Account) *AccountTemplate {
-	return &AccountTemplate{New(s, u, a)}
+func NewAccountTemplate(flashes []string, u *db.User, a *db.Account) *AccountTemplate {
+	return &AccountTemplate{New(flashes, u, a)}
 }
 
 type FunnelTemplate struct {
