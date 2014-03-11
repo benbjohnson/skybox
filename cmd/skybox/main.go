@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,6 +15,8 @@ import (
 )
 
 var (
+	addr     = flag.String("addr", ":80", "HTTP address")
+	tlsAddr  = flag.String("tls-addr", ":443", "HTTPS address")
 	dataDir  = flag.String("data-dir", "", "data directory")
 	certFile = flag.String("cert-file", "", "SSL certificate file")
 	keyFile  = flag.String("key-file", "", "SSL key file")
@@ -40,6 +43,7 @@ func main() {
 	} else if *keyFile != "" && *certFile == "" {
 		log.Fatal("certificate file required: --cert-file")
 	}
+	var useTLS = (*certFile != "" && *keyFile != "")
 
 	// Initialize data directory.
 	if err := os.MkdirAll(*dataDir, 0700); err != nil {
@@ -56,10 +60,23 @@ func main() {
 	}
 	defer db.Close()
 
-	// Start server.
-	var s server.Server
-	s.DB = &db
-	log.Printf("Listening on http://localhost%s", s.Addr)
+	// Initialize handler.
+	h, err := server.NewHandler(&db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Start servers.
+	log.Printf("Listening on http://localhost%s", *addr)
+	if useTLS {
+		log.Printf("Listening on http://localhost%s", *tlsAddr)
+	}
 	log.SetFlags(log.LstdFlags)
-	log.Fatal(s.ListenAndServe())
+
+	go func() { log.Fatal(http.ListenAndServe(*addr, h)) }()
+	if useTLS {
+		go func() { log.Fatal(http.ListenAndServeTLS(*tlsAddr, *certFile, *keyFile, h)) }()
+	}
+
+	select {}
 }

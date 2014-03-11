@@ -34,7 +34,7 @@
           </tr>
         </thead>
         <tbody>
-          <% for _, f := range t.FunnelResult.Steps { %>
+          <% for _, f := range t.Result.Steps { %>
             <tr>
               <td>
                 <%= regexp.MustCompile(`^resource == "(.+)"$`).ReplaceAllString(f.Condition, "$1") %>
@@ -51,7 +51,7 @@
 
   <script src="/assets/funnel_show.js"></script>
   <script>
-    var result = <% json.NewEncoder(w).Encode(t.FunnelResult) %>;
+    var result = <% json.NewEncoder(w).Encode(t.Result) %>;
     update(result);
   </script>
 </html>

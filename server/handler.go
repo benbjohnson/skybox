@@ -1,69 +1,106 @@
 package server
 
 import (
+	"errors"
 	"log"
 	"net/http"
-	"sync"
+	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/skybox/skybox/db"
 	"github.com/skybox/skybox/server/template"
 )
 
-type handler struct {
-	sync.RWMutex
-	server *Server
-	txs    map[*http.Request]*db.Tx
+var (
+	// ErrUnauthorized is returned when a user is not permitted to perform
+	// an action.
+	ErrUnauthorized = errors.New("unauthorized")
+)
+
+// Handler represents an HTTP interface to the database.
+type Handler struct {
+	*mux.Router
+	db    *db.DB
+	store sessions.Store
 }
 
-// transaction retrieves a transaction for a given request.
-func (h *handler) transaction(r *http.Request) *db.Tx {
-	h.RLock()
-	defer h.RUnlock()
-	return h.txs[r]
-}
-
-// setTx sets a transaction for a given request.
-func (h *handler) setTx(r *http.Request, t *db.Tx) {
-	h.Lock()
-	defer h.Unlock()
-	if h.txs == nil {
-		h.txs = make(map[*http.Request]*db.Tx)
+// NewHandler creates a new Handler instance.
+func NewHandler(db *db.DB) (*Handler, error) {
+	secret, err := db.Secret()
+	if err != nil {
+		return nil, err
 	}
-	h.txs[r] = t
+
+	// Setup the handler.
+	h := &Handler{
+		Router: mux.NewRouter(),
+		db:     db,
+		store:  sessions.NewCookieStore(secret),
+	}
+	h.Handle("/track.png", http.HandlerFunc(h.track)).Methods("GET")
+	NewRootHandler(h)
+	NewAccountHandler(h)
+	NewFunnelHandler(h)
+
+	// Setup routes.
+	/*
+		(&homeHandler{handler{server: s}}).install()
+		(&trackHandler{handler{server: s}}).install()
+		(&accountHandler{handler{server: s}}).install()
+		(&funnelsHandler{handler{server: s}}).install()
+	*/
+	return h, nil
 }
 
-// removeTx removes a transaction for a request.
-func (h *handler) removeTx(r *http.Request) {
-	h.Lock()
-	defer h.Unlock()
-	delete(h.txs, r)
+// DB returns the database associated with the handler.
+func (h *Handler) DB() *db.DB {
+	return h.db
 }
 
-// transactional executes a handler in the context of a read/write transaction.
-func (h *handler) transact(handler http.Handler) http.Handler {
-	return &transactor{parent: h, handler: handler}
-}
+func (h *Handler) track(w http.ResponseWriter, r *http.Request) {
+	h.db.Do(func(tx *db.Tx) error {
+		// Find account by API key.
+		a, err := tx.AccountByAPIKey(r.FormValue("apiKey"))
+		if err != nil {
+			http.Error(w, "invalid api key", http.StatusBadRequest)
+			return err
+		}
 
-// rwtransactional executes a handler in the context of a read/write transaction.
-func (h *handler) rwtransact(handler http.Handler) http.Handler {
-	return &rwtransactor{parent: h, handler: handler}
-}
+		// Extract event from URL parameters.
+		e := &db.Event{
+			UserID:    r.FormValue("user.id"),
+			DeviceID:  r.FormValue("device.id"),
+			Timestamp: time.Now().UTC(),
+			Channel:   r.FormValue("channel"),
+			Resource:  r.FormValue("resource"),
+			Action:    r.FormValue("action"),
+			Data:      make(map[string]interface{}),
+		}
+		if domain := r.FormValue("domain"); len(domain) > 0 {
+			e.Data["domain"] = domain
+		}
+		if path := r.FormValue("path"); len(path) > 0 {
+			e.Data["path"] = path
+		}
 
-func (h *handler) authorize(handler http.Handler) http.Handler {
-	return &authorizer{parent: h, handler: handler}
-}
+		// Send event to Sky.
+		if err := a.Track(e); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
 
-// session returns the current session.
-func (h *handler) session(r *http.Request) *sessions.Session {
-	session, _ := h.server.store.Get(r, "default")
-	return session
+		// Write png to response.
+		b, _ := Asset("pixel.png")
+		w.Write(b)
+
+		return nil
+	})
 }
 
 // auth returns the logged in user and account for a given request.
-func (h *handler) auth(r *http.Request) (*db.User, *db.Account) {
-	tx := h.transaction(r)
-	session := h.session(r)
+func (h *Handler) Authenticate(tx *db.Tx, r *http.Request) (*db.User, *db.Account) {
+	session := h.Session(r)
 	id, ok := session.Values["UserID"]
 	if !ok {
 		return nil, nil
@@ -79,58 +116,19 @@ func (h *handler) auth(r *http.Request) (*db.User, *db.Account) {
 	return nil, nil
 }
 
-// notFound returns a 404 not found page.
-func (h *handler) notFound(w http.ResponseWriter, r *http.Request) {
-	user, account := h.auth(r)
-	t := template.New(h.session(r), user, account)
-	t.NotFound(w)
+// Session returns the current session for a request.
+func (h *Handler) Session(r *http.Request) *sessions.Session {
+	session, _ := h.store.Get(r, "default")
+	return session
 }
 
-// transactor executes a handler in the context of a read-only transaction.
-type transactor struct {
-	parent  *handler
-	handler http.Handler
+// Unauthorized redirects to the home page.
+func (h *Handler) Unauthorized(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func (t *transactor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	t.parent.server.DB.With(func(tx *db.Tx) error {
-		t.parent.setTx(req, tx)
-		t.handler.ServeHTTP(w, req)
-		t.parent.removeTx(req)
-		return nil
-	})
-}
-
-// rwtransactor executes a handler in the context of a read/write transaction.
-type rwtransactor struct {
-	parent  *handler
-	handler http.Handler
-}
-
-func (t *rwtransactor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	err := t.parent.server.DB.Do(func(tx *db.Tx) error {
-		t.parent.setTx(req, tx)
-		t.handler.ServeHTTP(w, req)
-		t.parent.removeTx(req)
-		return nil
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-// authorizer checks that there is a user id in the session before allowing
-// the handler to continue.
-type authorizer struct {
-	parent  *handler
-	handler http.Handler
-}
-
-func (a *authorizer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	session, _ := a.parent.server.store.Get(req, "default")
-	if _, ok := session.Values["UserID"]; !ok {
-		http.Redirect(w, req, "/login", http.StatusFound)
-		return
-	}
-	a.handler.ServeHTTP(w, req)
+// NotFound returns a 404 not found page.
+func (h *Handler) NotFound(tx *db.Tx, w http.ResponseWriter, r *http.Request) {
+	user, account := h.Authenticate(tx, r)
+	template.New(h.Session(r), user, account).NotFound(w)
 }

@@ -1,0 +1,50 @@
+<%! func (t *Template) Dashboard(w io.Writer) error %>
+
+<%%
+import (
+	"fmt"
+	"io"
+  "os"
+)
+%%>
+
+<%
+hostname, _ := os.Hostname()
+if hostname == "" {
+  hostname = "HOSTNAME";
+}
+%>
+
+<!DOCTYPE html>
+<html lang="en">
+  <% t.Head(w, "") %>
+
+  <body id="index">
+    <div class="container">
+      <% t.Nav(w) %>
+
+      <div class="jumbotron">
+        <h1>Welcome to Skybox</h1>
+        <p>
+          Skybox is a tool for tracking user events and querying them through funnel analysis.
+          Funnel analysis is a way to see how users in your application move through multi-step tasks (such as signing up or purchasing).
+        </p>
+
+        <p>
+          To add event tracking to your application, simple copy the following HTML snippet and paste it into your code:
+        </p>
+
+        <pre>
+&lt;script type="text/javascript" src="//<%= hostname %>/skybox.js" async
+  data-api-key="<%= t.Account.APIKey %>"&gt;
+&lt;/script&gt;
+        </pre>
+        <p>
+          <a class="btn btn-lg btn-primary" href="https://github.com/skybox/skybox" target="_blank" role="button">Find us on Github &raquo;</a>
+        </p>
+      </div>
+
+    </div> <!-- /container -->
+  </body>
+</html>
+

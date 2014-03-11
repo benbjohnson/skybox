@@ -33,7 +33,7 @@ func ReadBodyJSON(resp *http.Response) map[string]interface{} {
 
 func getHTML(path string) (status int, body string) {
 	c := NewHTTPClient()
-	req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost%s%s", testAddr, path), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("http://localhost%s%s", 7000, path), nil)
 	resp, err := c.Do(req)
 	if err != nil {
 		panic("get http error: " + err.Error())

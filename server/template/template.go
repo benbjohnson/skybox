@@ -19,11 +19,15 @@ type AccountTemplate struct {
 	*Template
 }
 
+func NewAccountTemplate(s *sessions.Session, u *db.User, a *db.Account) *AccountTemplate {
+	return &AccountTemplate{New(s, u, a)}
+}
+
 type FunnelTemplate struct {
 	*Template
-	Funnel       *db.Funnel
-	FunnelResult *db.FunnelResult
-	Resources    []string
+	Funnel    *db.Funnel
+	Result    *db.FunnelResult
+	Resources []string
 }
 
 type FunnelsTemplate struct {

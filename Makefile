@@ -32,12 +32,12 @@ less:
 	@lessc server/assets/application.less > server/assets/application.css
 
 run: assets templates
-	go run ./cmd/skybox/main.go --data-dir=/tmp/skybox
+	go run ./cmd/skybox/main.go --data-dir=/tmp/skybox --addr=:7000
 
 templates:
 	@ego server/template
 
 test: assets templates fmt
-	@go test -a -v -test.run=$(TEST) $(PKG)
+	@go test -v -test.run=$(TEST) $(PKG)
 
 .PHONY: assets bench cloc cover fmt less run templates test
